@@ -7,12 +7,11 @@ from typing import Optional
 from src.schemas import (
     EvaluationRequest,
     EvaluationSummary,
-    LLMProvider,
     AnnotationConfig
 )
-from src.services.llm_service import LLMService
+from src.services.llm_service import LLMService, LLMProvider
 from src.services.evaluation_service import EvaluationService
-from src.utils.file_utils import TempFileManager, validate_pdf, get_file_size_mb
+from src.file_utils import TempFileManager, validate_pdf, get_file_size_mb
 
 
 router = APIRouter()
@@ -21,22 +20,20 @@ router = APIRouter()
 @router.post("/evaluate-pdf", response_class=FileResponse)
 async def evaluate_pdf(
     file: UploadFile = File(..., description="PDF answer sheet to evaluate"),
-    subject: str = Form(..., description="Subject name"),
-    marking_scheme: str = Form(..., description="Question paper and marking scheme"),
-    llm_provider: str = Form(default="gemini", description="LLM provider: gemini or openai"),
-    max_marks_per_page: Optional[float] = Form(default=None, description="Maximum marks per page"),
+    subject: Optional[str] = Form(default="General", description="Subject name"),
+    marking_scheme: Optional[str] = Form(default=None, description="Question paper and marking scheme"),
+    max_marks_per_page: Optional[float] = Form(default=10.0, description="Maximum marks per page"),
     annotation_font_size: int = Form(default=10, description="Font size for annotations")
 ) -> FileResponse:
     """
     Evaluate a PDF answer sheet and return annotated PDF
     
     Args:
-        file: PDF file upload
-        subject: Subject name for evaluation
-        marking_scheme: Text or JSON containing questions and marking scheme
-        llm_provider: LLM provider to use (gemini or openai)
-        max_marks_per_page: Optional override for max marks per page
-        annotation_font_size: Font size for PDF annotations
+        file: PDF file upload (REQUIRED)
+        subject: Subject name for evaluation (optional, default: "General")
+        marking_scheme: Text or JSON containing questions and marking scheme (optional)
+        max_marks_per_page: Maximum marks per page (optional, default: 10.0)
+        annotation_font_size: Font size for PDF annotations (optional, default: 10)
         
     Returns:
         Annotated PDF file with marks and remarks
@@ -69,20 +66,14 @@ async def evaluate_pdf(
                 detail=f"PDF file too large ({file_size:.1f}MB). Maximum size is 50MB"
             )
         
-        # Parse LLM provider
-        try:
-            provider = LLMProvider(llm_provider.lower())
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid LLM provider. Must be 'gemini' or 'openai'"
-            )
+        # Use default marking scheme if not provided
+        if marking_scheme is None:
+            marking_scheme = f"Evaluate the student's answers for {subject}. Award marks based on correctness, completeness, and clarity."
         
-        # Create evaluation request
+        # Create evaluation request (always use Gemini)
         eval_request = EvaluationRequest(
             subject=subject,
             marking_scheme=marking_scheme,
-            llm_provider=provider,
             max_marks_per_page=max_marks_per_page
         )
         
@@ -91,9 +82,9 @@ async def evaluate_pdf(
             font_size=annotation_font_size
         )
         
-        # Initialize services
-        # TODO: Add API key management (environment variables or secure storage)
-        llm_service = LLMService(provider=provider)
+        # Initialize services (always use Gemini)
+        # TODO: Set GEMINI_API_KEY in environment variables
+        llm_service = LLMService(provider=LLMProvider.GEMINI)
         evaluation_service = EvaluationService(
             llm_service=llm_service,
             annotation_config=annotation_config
@@ -164,5 +155,6 @@ async def root():
             "/docs": "GET - API documentation (Swagger UI)",
             "/redoc": "GET - API documentation (ReDoc)"
         },
-        "supported_llm_providers": ["gemini", "openai"]
+        "llm_provider": "Google Gemini",
+        "note": "Set GEMINI_API_KEY environment variable before use"
     }

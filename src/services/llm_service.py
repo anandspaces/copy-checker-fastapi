@@ -1,23 +1,28 @@
 import os
 import json
-from typing import Optional, Dict, Any
+from typing import Optional
 from abc import ABC, abstractmethod
-
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
-
-try:
-    from openai import OpenAI
-except ImportError:
-    OpenAI = None
+from enum import Enum
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 
 from src.schemas import (
     LLMEvaluationRequest,
-    LLMEvaluationResponse,
-    LLMProvider
+    LLMEvaluationResponse
 )
+
+# Load environment variables
+load_dotenv()
+
+# Gemini configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = 'gemini-3-flash-preview'  # Using latest Gemini model
+
+
+class LLMProvider(str, Enum):
+    """Supported LLM providers"""
+    GEMINI = "gemini"
 
 
 class BaseLLMClient(ABC):
@@ -66,49 +71,55 @@ Do not include any text before or after the JSON."""
 
 
 class GeminiLLMClient(BaseLLMClient):
-    """Google Gemini LLM client"""
+    """Google Gemini LLM client using NEW google-genai SDK"""
     
     def __init__(self, api_key: Optional[str] = None):
-        """Initialize Gemini client"""
+        """Initialize Gemini client with NEW SDK"""
         if genai is None:
-            raise ImportError("google-generativeai not installed. Run: pip install google-generativeai")
+            raise ImportError(
+                "google-genai not installed. "
+                "Run: pip install google-genai"
+            )
         
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        self.api_key = api_key or GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not provided")
         
-        genai.configure(api_key=self.api_key)
+        # ✅ Create client using NEW SDK pattern
+        self.client = genai.Client(api_key=self.api_key)
         
-        # Use Gemini 1.5 Flash for fast, accurate evaluation
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # Configure for JSON output
-        self.generation_config = {
-            "temperature": 0.3,  # Lower temperature for consistency
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 500,
-        }
+        # ✅ Configure generation settings using NEW SDK types
+        self.generation_config = types.GenerateContentConfig(
+            temperature=0.3,
+            top_p=0.95,
+            top_k=40,
+            max_output_tokens=500,
+        )
     
     def evaluate_page(self, request: LLMEvaluationRequest) -> LLMEvaluationResponse:
-        """Evaluate page using Gemini"""
+        """Evaluate page using Gemini with NEW SDK"""
         prompt = self._build_evaluation_prompt(request)
         
         try:
-            # First attempt
-            response = self.model.generate_content(
-                prompt,
-                generation_config=self.generation_config
+            # First attempt using NEW SDK pattern
+            response = self.client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=self.generation_config
             )
             
-            return self._parse_response(response.text, request)
+            # Extract text from response
+            response_text = response.text
+            
+            return self._parse_response(response_text, request)
             
         except Exception as e:
             # Retry once on failure
             try:
-                response = self.model.generate_content(
-                    prompt,
-                    generation_config=self.generation_config
+                response = self.client.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=prompt,
+                    config=self.generation_config
                 )
                 return self._parse_response(response.text, request)
             except Exception as retry_error:
@@ -148,102 +159,26 @@ class GeminiLLMClient(BaseLLMClient):
             raise ValueError(f"Invalid JSON response: {str(e)}")
         except Exception as e:
             raise ValueError(f"Failed to parse response: {str(e)}")
-
-
-class OpenAILLMClient(BaseLLMClient):
-    """OpenAI LLM client"""
     
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4o-mini"):
-        """Initialize OpenAI client"""
-        if OpenAI is None:
-            raise ImportError("openai not installed. Run: pip install openai")
-        
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("OPENAI_API_KEY not provided")
-        
-        self.client = OpenAI(api_key=self.api_key)
-        self.model = model
-    
-    def evaluate_page(self, request: LLMEvaluationRequest) -> LLMEvaluationResponse:
-        """Evaluate page using OpenAI"""
-        prompt = self._build_evaluation_prompt(request)
-        
+    def __del__(self):
+        """Cleanup: Close the client when object is destroyed"""
         try:
-            # First attempt
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert examiner. Respond ONLY with valid JSON."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.3,
-                max_tokens=500,
-                response_format={"type": "json_object"}  # Force JSON mode
-            )
-            
-            return self._parse_response(response.choices[0].message.content, request)
-            
-        except Exception as e:
-            # Retry once on failure
-            try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": "You are an expert examiner. Respond ONLY with valid JSON."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.3,
-                    max_tokens=500,
-                    response_format={"type": "json_object"}
-                )
-                return self._parse_response(response.choices[0].message.content, request)
-            except Exception as retry_error:
-                return LLMEvaluationResponse(
-                    marks_awarded=0.0,
-                    max_marks=request.max_marks or 10.0,
-                    remarks=f"Evaluation failed: {str(retry_error)[:100]}"
-                )
-    
-    def _parse_response(self, response_text: str, request: LLMEvaluationRequest) -> LLMEvaluationResponse:
-        """Parse LLM response into structured format"""
-        try:
-            data = json.loads(response_text)
-            response = LLMEvaluationResponse(**data)
-            
-            # Ensure marks don't exceed maximum
-            if request.max_marks and response.marks_awarded > response.max_marks:
-                response.marks_awarded = response.max_marks
-            
-            return response
-            
-        except Exception as e:
-            raise ValueError(f"Failed to parse response: {str(e)}")
+            if hasattr(self, 'client'):
+                self.client.close()
+        except:
+            pass
 
 
 class LLMService:
-    """Service for managing LLM evaluation"""
+    """Service for managing LLM evaluation (Gemini only)"""
     
-    def __init__(
-        self,
-        provider: LLMProvider = LLMProvider.GEMINI,
-        api_key: Optional[str] = None
-    ):
-        """Initialize LLM service with specified provider"""
-        self.provider = provider
+    def __init__(self, api_key: Optional[str] = None, provider: LLMProvider = LLMProvider.GEMINI):
+        """Initialize LLM service with Gemini"""
+        if provider != LLMProvider.GEMINI:
+            raise ValueError("Only Gemini provider is supported")
         
-        if provider == LLMProvider.GEMINI:
-            self.client = GeminiLLMClient(api_key)
-        elif provider == LLMProvider.OPENAI:
-            self.client = OpenAILLMClient(api_key)
-        else:
-            raise ValueError(f"Unsupported LLM provider: {provider}")
+        self.provider = provider
+        self.client = GeminiLLMClient(api_key)
     
     def evaluate_page(self, request: LLMEvaluationRequest) -> LLMEvaluationResponse:
         """Evaluate a single page"""

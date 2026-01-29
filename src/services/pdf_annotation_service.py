@@ -1,6 +1,6 @@
 import fitz  # PyMuPDF
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 from src.schemas import PageEvaluation, AnnotationConfig, EvaluationSummary
 
@@ -114,17 +114,18 @@ class PDFAnnotationService:
         if len(remark) > max_length:
             remark = remark[:max_length-3] + "..."
         
-        # Calculate text dimensions
+        # Font configuration - use built-in fonts (no external file needed)
         font_size = self.config.font_size
-        font_name = "helv"  # Helvetica
+        # Use built-in font name (no file needed)
+        fontname = "helv"  # Built-in Helvetica
         
         # Estimate box dimensions
         text_width = len(remark) * font_size * 0.5
         text_height = font_size + 10
         
-        # Adjust if text is too wide
-        if text_width > 190:
-            # Split into multiple lines
+        # Adjust if text is too wide - split into multiple lines
+        max_width = 180
+        if text_width > max_width:
             words = remark.split()
             lines = []
             current_line = []
@@ -132,11 +133,14 @@ class PDFAnnotationService:
             
             for word in words:
                 word_width = len(word) * font_size * 0.5
-                if current_width + word_width < 180:
+                space_width = font_size * 0.3
+                
+                if current_width + word_width + space_width < max_width:
                     current_line.append(word)
-                    current_width += word_width + font_size * 0.3
+                    current_width += word_width + space_width
                 else:
-                    lines.append(' '.join(current_line))
+                    if current_line:
+                        lines.append(' '.join(current_line))
                     current_line = [word]
                     current_width = word_width
             
@@ -144,7 +148,7 @@ class PDFAnnotationService:
                 lines.append(' '.join(current_line))
             
             remark = '\n'.join(lines[:3])  # Max 3 lines
-            text_height = (len(lines) * (font_size + 2)) + 10
+            text_height = (len(lines) * (font_size + 3)) + 10
         
         # Draw semi-transparent background box
         box_rect = fitz.Rect(
@@ -154,22 +158,25 @@ class PDFAnnotationService:
             y + text_height
         )
         
-        # Light yellow background
+        # Light yellow background with border
         page.draw_rect(
             box_rect,
-            color=(1, 1, 0.8),
-            fill=(1, 1, 0.9),
-            width=0.5
+            color=(0.8, 0.8, 0),  # Darker yellow border
+            fill=(1, 1, 0.9),     # Light yellow fill
+            width=1
         )
         
-        # Add text
-        text_point = fitz.Point(x, y + font_size)
-        page.insert_text(
-            text_point,
+        # Add text using insert_textbox for better multi-line support
+        text_rect = fitz.Rect(x, y, x + 185, y + text_height)
+        
+        # Use insert_textbox with built-in font (more reliable)
+        page.insert_textbox(
+            text_rect,
             remark,
             fontsize=font_size,
-            fontname=font_name,
-            color=self.config.font_color
+            fontname=fontname,
+            color=self.config.font_color,
+            align=fitz.TEXT_ALIGN_LEFT
         )
     
     def _add_marks_text(
@@ -188,25 +195,29 @@ class PDFAnnotationService:
             marks_text: Marks text (e.g., "Marks: 8/10")
         """
         font_size = self.config.font_size + 2  # Slightly larger
-        font_name = "helv-bold"  # Bold Helvetica
+        # Use built-in bold font
+        fontname = "hebo"  # Built-in Helvetica Bold
         
         # Draw box
         box_rect = fitz.Rect(x - 5, y - 15, x + 140, y + 10)
         page.draw_rect(
             box_rect,
-            color=(1, 0, 0),  # Red border
-            fill=(1, 0.95, 0.95),  # Light red background
-            width=1.5
+            color=(0.8, 0, 0),      # Dark red border
+            fill=(1, 0.95, 0.95),   # Light red background
+            width=2
         )
         
-        # Add text
-        text_point = fitz.Point(x, y)
-        page.insert_text(
-            text_point,
+        # Add text using insert_textbox
+        text_rect = fitz.Rect(x, y - 12, x + 130, y + 8)
+        
+        # Use insert_textbox with built-in font
+        page.insert_textbox(
+            text_rect,
             marks_text,
             fontsize=font_size,
-            fontname=font_name,
-            color=(0.8, 0, 0)  # Dark red
+            fontname=fontname,
+            color=(0.8, 0, 0),  # Dark red
+            align=fitz.TEXT_ALIGN_LEFT
         )
     
     def _add_summary_to_page(
@@ -227,8 +238,8 @@ class PDFAnnotationService:
         page_height = rect.height
         
         # Position for summary (bottom center)
-        summary_x = page_width / 2 - 100
-        summary_y = page_height - 120
+        summary_x = page_width / 2 - 110
+        summary_y = page_height - 100
         
         # Create summary text
         summary_text = f"""EVALUATION SUMMARY
@@ -240,24 +251,34 @@ Percentage: {summary.percentage:.1f}%"""
         box_rect = fitz.Rect(
             summary_x - 10,
             summary_y - 10,
-            summary_x + 220,
-            summary_y + 70
+            summary_x + 240,
+            summary_y + 65
         )
         
         page.draw_rect(
             box_rect,
-            color=(0, 0, 0.8),  # Blue border
-            fill=(0.95, 0.95, 1),  # Light blue background
+            color=(0, 0, 0.8),      # Blue border
+            fill=(0.95, 0.95, 1),   # Light blue background
             width=2
         )
         
-        # Add text
-        font_size = 11
-        text_point = fitz.Point(summary_x, summary_y + font_size)
-        page.insert_text(
-            text_point,
+        # Add text using insert_textbox
+        text_rect = fitz.Rect(
+            summary_x,
+            summary_y,
+            summary_x + 220,
+            summary_y + 60
+        )
+        
+        # Use built-in bold font
+        font_size = 10
+        fontname = "hebo"  # Built-in Helvetica Bold
+        
+        page.insert_textbox(
+            text_rect,
             summary_text,
             fontsize=font_size,
-            fontname="helv-bold",
-            color=(0, 0, 0.6)  # Dark blue
+            fontname=fontname,
+            color=(0, 0, 0.6),  # Dark blue
+            align=fitz.TEXT_ALIGN_LEFT
         )

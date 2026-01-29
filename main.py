@@ -34,31 +34,31 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Answer Sheet Evaluation API",
     description="""
-    Automated subjective answer sheet evaluation system using OCR, Computer Vision, and LLM.
+    Automated subjective answer sheet evaluation system using OCR, Computer Vision, and Google Gemini.
     
     ## Features
     
-    - **PDF Processing**: Accepts PDF answer sheets
+    - **PDF Processing**: Accepts PDF answer sheets (only PDF file is required)
     - **OCR**: Extracts handwritten/printed text using Tesseract
     - **Computer Vision**: Analyzes page metadata (writing density, diagrams, crossed-out regions)
-    - **AI Evaluation**: Uses LLM (Gemini/OpenAI) for subject-aware evaluation
+    - **AI Evaluation**: Uses Google Gemini for subject-aware evaluation
     - **PDF Annotation**: Overlays marks and remarks on original PDF
     
     ## Workflow
     
-    1. Upload PDF answer sheet
-    2. Provide subject and marking scheme
+    1. Upload PDF answer sheet (REQUIRED)
+    2. Optionally provide subject and marking scheme
     3. System processes each page:
        - Converts to image
        - Applies OCR
        - Extracts vision metadata
-       - Evaluates with LLM
+       - Evaluates with Gemini
     4. Returns annotated PDF with marks and remarks
     
-    ## API Keys Required
+    ## API Key Required
     
     - **Gemini**: Set `GEMINI_API_KEY` environment variable
-    - **OpenAI**: Set `OPENAI_API_KEY` environment variable
+      - Get your key from: https://makersuite.google.com/app/apikey
     
     ## Limitations
     
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
     # Run the application
     uvicorn.run(
-        "app.main:app",
+        "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,  # Enable auto-reload in development
