@@ -1,0 +1,536 @@
+2026-01-30 19:30:46,014 - main - INFO - ================================================================================
+2026-01-30 19:30:46,015 - main - INFO - STARTING AI ANSWER SHEET EVALUATOR
+2026-01-30 19:30:46,015 - main - INFO - Version: 2.0.0
+2026-01-30 19:30:46,015 - main - INFO - ================================================================================
+2026-01-30 19:30:46,016 - main - INFO - ✓ GEMINI_API_KEY configured
+2026-01-30 19:30:46,016 - main - INFO - Service architecture:
+2026-01-30 19:30:46,016 - main - INFO -   Phase 1: OCR Text Extraction (Gemini Vision)
+2026-01-30 19:30:46,016 - main - INFO -   Phase 2: Page-by-Page Evaluation (Gemini LLM)
+2026-01-30 19:30:46,016 - main - INFO -   Phase 3: PDF Annotation (PyMuPDF)
+2026-01-30 19:30:46,016 - main - INFO - 
+2026-01-30 19:30:46,016 - main - INFO - Available endpoints:
+2026-01-30 19:30:46,016 - main - INFO -   POST /evaluate - Main evaluation endpoint
+2026-01-30 19:30:46,016 - main - INFO -   GET  /health   - Health check
+2026-01-30 19:30:46,016 - main - INFO -   GET  /info     - Service information
+2026-01-30 19:30:46,017 - main - INFO -   GET  /docs     - API documentation
+2026-01-30 19:30:46,017 - main - INFO - ================================================================================
+2026-01-30 19:31:49,269 - main - INFO - Request: POST /evaluate-pdf-ocr
+2026-01-30 19:31:49,270 - main - INFO - Response: 404
+2026-01-30 19:32:05,370 - main - INFO - Request: POST /evaluate
+2026-01-30 19:32:05,413 - main - INFO - Response: 422
+2026-01-30 19:32:28,549 - main - INFO - Request: GET /
+2026-01-30 19:32:28,550 - main - INFO - Response: 200
+2026-01-30 19:32:28,574 - main - INFO - Request: GET /favicon.ico
+2026-01-30 19:32:28,574 - main - INFO - Response: 404
+2026-01-30 19:32:31,390 - main - INFO - Request: GET /docs
+2026-01-30 19:32:31,390 - main - INFO - Response: 200
+2026-01-30 19:32:31,504 - main - INFO - Request: GET /openapi.json
+2026-01-30 19:32:31,512 - main - INFO - Response: 200
+2026-01-30 19:32:49,086 - main - INFO - ================================================================================
+2026-01-30 19:32:49,086 - main - INFO - SHUTTING DOWN AI ANSWER SHEET EVALUATOR
+2026-01-30 19:32:49,086 - main - INFO - ================================================================================
+2026-01-30 19:32:49,834 - main - INFO - ================================================================================
+2026-01-30 19:32:49,834 - main - INFO - STARTING AI ANSWER SHEET EVALUATOR
+2026-01-30 19:32:49,834 - main - INFO - Version: 2.0.0
+2026-01-30 19:32:49,834 - main - INFO - ================================================================================
+2026-01-30 19:32:49,835 - main - INFO - ✓ GEMINI_API_KEY configured
+2026-01-30 19:32:49,835 - main - INFO - Service architecture:
+2026-01-30 19:32:49,835 - main - INFO -   Phase 1: OCR Text Extraction (Gemini Vision)
+2026-01-30 19:32:49,835 - main - INFO -   Phase 2: Page-by-Page Evaluation (Gemini LLM)
+2026-01-30 19:32:49,835 - main - INFO -   Phase 3: PDF Annotation (PyMuPDF)
+2026-01-30 19:32:49,835 - main - INFO - 
+2026-01-30 19:32:49,835 - main - INFO - Available endpoints:
+2026-01-30 19:32:49,835 - main - INFO -   POST /evaluate - Main evaluation endpoint
+2026-01-30 19:32:49,835 - main - INFO -   GET  /health   - Health check
+2026-01-30 19:32:49,835 - main - INFO -   GET  /info     - Service information
+2026-01-30 19:32:49,835 - main - INFO -   GET  /docs     - API documentation
+2026-01-30 19:32:49,835 - main - INFO - ================================================================================
+2026-01-30 19:32:54,229 - main - INFO - Request: GET /docs
+2026-01-30 19:32:54,229 - main - INFO - Response: 200
+2026-01-30 19:32:54,280 - main - INFO - Request: GET /openapi.json
+2026-01-30 19:32:54,290 - main - INFO - Response: 200
+2026-01-30 19:34:14,614 - main - INFO - Request: POST /evaluate
+2026-01-30 19:34:14,659 - src.routes - INFO - ================================================================================
+2026-01-30 19:34:14,660 - src.routes - INFO - NEW EVALUATION REQUEST
+2026-01-30 19:34:14,660 - src.routes - INFO - File: Durgesh Yadav GS 5&6 Test1.pdf
+2026-01-30 19:34:14,660 - src.routes - INFO - Subject: UPSC
+2026-01-30 19:34:14,660 - src.routes - INFO - Max marks per page: 10.0
+2026-01-30 19:34:14,660 - src.routes - INFO - Strict marking: False
+2026-01-30 19:34:14,660 - src.routes - INFO - Partial credit: True
+2026-01-30 19:34:14,660 - src.routes - INFO - ================================================================================
+2026-01-30 19:34:14,661 - src.file_utils - INFO - TempFileManager initialized. Directory: /tmp/answer_sheet_evaluator
+2026-01-30 19:34:14,661 - src.routes - INFO - Saving uploaded file...
+2026-01-30 19:34:14,661 - src.file_utils - INFO - Saving upload: Durgesh Yadav GS 5&6 Test1.pdf -> /tmp/answer_sheet_evaluator/6899e0d9-a7b6-46d4-b3cb-d8d5f6a820cb.pdf
+2026-01-30 19:34:14,679 - src.file_utils - INFO - Upload saved successfully. Size: 11,476,217 bytes
+2026-01-30 19:34:14,680 - src.routes - INFO - File size: 10.94 MB
+2026-01-30 19:34:14,680 - src.routes - INFO - Initializing evaluation pipeline...
+2026-01-30 19:34:14,680 - src.services.service_factory - INFO - Creating orchestrator with dependencies
+2026-01-30 19:34:14,680 - src.services.service_factory - INFO - Creating OCR service: gemini
+2026-01-30 19:34:14,680 - src.services.ocr_service - INFO - Initializing GeminiOCRService with model: gemini-2.0-flash-exp
+2026-01-30 19:34:14,714 - src.services.ocr_service - INFO - GeminiOCRService initialized successfully
+2026-01-30 19:34:14,715 - src.services.service_factory - INFO - Creating evaluation service: LLMProvider.GEMINI
+2026-01-30 19:34:14,715 - src.services.evaluation_service - INFO - Initializing GeminiEvaluationService with model: gemini-2.0-flash-exp
+2026-01-30 19:34:14,724 - src.services.evaluation_service - INFO - GeminiEvaluationService initialized successfully
+2026-01-30 19:34:14,724 - src.services.service_factory - INFO - Creating annotation service
+2026-01-30 19:34:14,724 - src.services.pdf_annotation_service - INFO - Initializing PDFAnnotationService
+2026-01-30 19:34:14,724 - src.services.pdf_annotation_service - INFO - Configuration: font_size=10, show_remarks=True, show_marks=True
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - Initializing EvaluationOrchestrator
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - EvaluationOrchestrator initialized successfully
+2026-01-30 19:34:14,724 - src.routes - INFO - Starting evaluation pipeline...
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - STARTING EVALUATION PIPELINE
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - Input PDF: /tmp/answer_sheet_evaluator/6899e0d9-a7b6-46d4-b3cb-d8d5f6a820cb.pdf
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - Subject: UPSC
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - Max marks per page: 10.0
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 19:34:14,724 - src.services.orchestrator_service - INFO - PHASE 1: OCR TEXT EXTRACTION
+2026-01-30 19:34:14,725 - src.services.orchestrator_service - INFO - --------------------------------------------------------------------------------
+2026-01-30 19:34:14,725 - src.services.orchestrator_service - INFO - Starting OCR extraction...
+2026-01-30 19:34:14,725 - src.services.ocr_service - INFO - Starting OCR for PDF: /tmp/answer_sheet_evaluator/6899e0d9-a7b6-46d4-b3cb-d8d5f6a820cb.pdf
+2026-01-30 19:34:14,736 - src.services.ocr_service - INFO - PDF has 26 pages. Starting extraction...
+2026-01-30 19:34:14,737 - src.services.ocr_service - INFO - Processing page 1/26
+2026-01-30 19:34:14,966 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:34:34,348 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:34:34,350 - src.services.ocr_service - ERROR - [Page 1] OCR attempt 1 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:34:34,350 - src.services.ocr_service - INFO - [Page 1] Retrying in 2s...
+2026-01-30 19:34:36,350 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:34:56,625 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:34:56,627 - src.services.ocr_service - ERROR - [Page 1] OCR attempt 2 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:34:56,627 - src.services.ocr_service - INFO - [Page 1] Retrying in 4s...
+2026-01-30 19:35:00,627 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:35:27,143 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:35:27,143 - src.services.ocr_service - ERROR - [Page 1] OCR attempt 3 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:35:27,144 - src.services.ocr_service - ERROR - [Page 1] All OCR attempts failed
+2026-01-30 19:35:27,144 - src.services.ocr_service - INFO - Page 1 OCR complete. Confidence: 0.00, Text length: 276
+2026-01-30 19:35:27,144 - src.services.ocr_service - INFO - Processing page 2/26
+2026-01-30 19:35:27,326 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:35:44,943 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:35:44,946 - src.services.ocr_service - ERROR - [Page 2] OCR attempt 1 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:35:44,946 - src.services.ocr_service - INFO - [Page 2] Retrying in 2s...
+2026-01-30 19:35:46,947 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:36:15,271 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:36:15,273 - src.services.ocr_service - ERROR - [Page 2] OCR attempt 2 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:36:15,273 - src.services.ocr_service - INFO - [Page 2] Retrying in 4s...
+2026-01-30 19:36:19,274 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:36:40,924 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent "HTTP/1.1 404 Not Found"
+2026-01-30 19:36:40,927 - src.services.ocr_service - ERROR - [Page 2] OCR attempt 3 failed: 404 NOT_FOUND. {'error': {'code': 404, 'message': 'models/gemini-2.0-flash-exp is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.', 'status': 'NOT_FOUND'}}
+2026-01-30 19:36:40,927 - src.services.ocr_service - ERROR - [Page 2] All OCR attempts failed
+2026-01-30 19:36:40,927 - src.services.ocr_service - INFO - Page 2 OCR complete. Confidence: 0.00, Text length: 276
+2026-01-30 19:36:40,927 - src.services.ocr_service - INFO - Processing page 3/26
+2026-01-30 19:36:41,122 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:38:52,971 - main - INFO - ================================================================================
+2026-01-30 19:38:52,971 - main - INFO - STARTING AI ANSWER SHEET EVALUATOR
+2026-01-30 19:38:52,971 - main - INFO - Version: 2.0.0
+2026-01-30 19:38:52,971 - main - INFO - ================================================================================
+2026-01-30 19:38:52,971 - main - INFO - ✓ GEMINI_API_KEY configured
+2026-01-30 19:38:52,971 - main - INFO - Service architecture:
+2026-01-30 19:38:52,971 - main - INFO -   Phase 1: OCR Text Extraction (Gemini Vision)
+2026-01-30 19:38:52,971 - main - INFO -   Phase 2: Page-by-Page Evaluation (Gemini LLM)
+2026-01-30 19:38:52,971 - main - INFO -   Phase 3: PDF Annotation (PyMuPDF)
+2026-01-30 19:38:52,971 - main - INFO - 
+2026-01-30 19:38:52,971 - main - INFO - Available endpoints:
+2026-01-30 19:38:52,971 - main - INFO -   POST /evaluate - Main evaluation endpoint
+2026-01-30 19:38:52,971 - main - INFO -   GET  /health   - Health check
+2026-01-30 19:38:52,971 - main - INFO -   GET  /info     - Service information
+2026-01-30 19:38:52,972 - main - INFO -   GET  /docs     - API documentation
+2026-01-30 19:38:52,972 - main - INFO - ================================================================================
+2026-01-30 19:38:55,082 - main - INFO - Request: GET /docs
+2026-01-30 19:38:55,083 - main - INFO - Response: 200
+2026-01-30 19:38:55,198 - main - INFO - Request: GET /openapi.json
+2026-01-30 19:38:55,204 - main - INFO - Response: 200
+2026-01-30 19:39:27,920 - main - INFO - Request: POST /evaluate
+2026-01-30 19:39:27,969 - src.routes - INFO - ================================================================================
+2026-01-30 19:39:27,969 - src.routes - INFO - NEW EVALUATION REQUEST
+2026-01-30 19:39:27,969 - src.routes - INFO - File: Durgesh Yadav GS 5&6 Test1.pdf
+2026-01-30 19:39:27,969 - src.routes - INFO - Subject: upsc
+2026-01-30 19:39:27,969 - src.routes - INFO - Max marks per page: 10.0
+2026-01-30 19:39:27,969 - src.routes - INFO - Strict marking: False
+2026-01-30 19:39:27,969 - src.routes - INFO - Partial credit: True
+2026-01-30 19:39:27,969 - src.routes - INFO - ================================================================================
+2026-01-30 19:39:27,970 - src.file_utils - INFO - TempFileManager initialized. Directory: /tmp/answer_sheet_evaluator
+2026-01-30 19:39:27,970 - src.routes - INFO - Saving uploaded file...
+2026-01-30 19:39:27,970 - src.file_utils - INFO - Saving upload: Durgesh Yadav GS 5&6 Test1.pdf -> /tmp/answer_sheet_evaluator/783bee61-37fb-4ee3-8926-83b98488795f.pdf
+2026-01-30 19:39:27,985 - src.file_utils - INFO - Upload saved successfully. Size: 11,476,217 bytes
+2026-01-30 19:39:27,985 - src.routes - INFO - File size: 10.94 MB
+2026-01-30 19:39:27,985 - src.routes - INFO - Initializing evaluation pipeline...
+2026-01-30 19:39:27,986 - src.services.service_factory - INFO - Creating orchestrator with dependencies
+2026-01-30 19:39:27,986 - src.services.service_factory - INFO - Creating OCR service: gemini
+2026-01-30 19:39:27,986 - src.services.ocr_service - INFO - Initializing GeminiOCRService with model: gemini-3-flash-preview
+2026-01-30 19:39:28,006 - src.services.ocr_service - INFO - GeminiOCRService initialized successfully
+2026-01-30 19:39:28,006 - src.services.service_factory - INFO - Creating evaluation service: LLMProvider.GEMINI
+2026-01-30 19:39:28,006 - src.services.evaluation_service - INFO - Initializing GeminiEvaluationService with model: gemini-3-flash-preview
+2026-01-30 19:39:28,015 - src.services.evaluation_service - INFO - GeminiEvaluationService initialized successfully
+2026-01-30 19:39:28,016 - src.services.service_factory - INFO - Creating annotation service
+2026-01-30 19:39:28,016 - src.services.pdf_annotation_service - INFO - Initializing PDFAnnotationService
+2026-01-30 19:39:28,016 - src.services.pdf_annotation_service - INFO - Configuration: font_size=10, show_remarks=True, show_marks=True
+2026-01-30 19:39:28,016 - src.services.orchestrator_service - INFO - Initializing EvaluationOrchestrator
+2026-01-30 19:39:28,016 - src.services.orchestrator_service - INFO - EvaluationOrchestrator initialized successfully
+2026-01-30 19:39:28,016 - src.routes - INFO - Starting evaluation pipeline...
+2026-01-30 19:39:28,016 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 19:39:28,016 - src.services.orchestrator_service - INFO - STARTING EVALUATION PIPELINE
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - Input PDF: /tmp/answer_sheet_evaluator/783bee61-37fb-4ee3-8926-83b98488795f.pdf
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - Subject: upsc
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - Max marks per page: 10.0
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - PHASE 1: OCR TEXT EXTRACTION
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - --------------------------------------------------------------------------------
+2026-01-30 19:39:28,017 - src.services.orchestrator_service - INFO - Starting OCR extraction...
+2026-01-30 19:39:28,017 - src.services.ocr_service - INFO - Starting OCR for PDF: /tmp/answer_sheet_evaluator/783bee61-37fb-4ee3-8926-83b98488795f.pdf
+2026-01-30 19:39:28,018 - src.services.ocr_service - INFO - PDF has 26 pages. Starting extraction...
+2026-01-30 19:39:28,018 - src.services.ocr_service - INFO - Processing page 1/26
+2026-01-30 19:39:28,238 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:40:04,884 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:40:04,896 - src.services.ocr_service - INFO - Page 1 OCR complete. Confidence: 0.95, Text length: 1717
+2026-01-30 19:40:04,897 - src.services.ocr_service - INFO - Processing page 2/26
+2026-01-30 19:40:05,072 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:40:48,124 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:40:48,143 - src.services.ocr_service - INFO - Page 2 OCR complete. Confidence: 0.95, Text length: 871
+2026-01-30 19:40:48,143 - src.services.ocr_service - INFO - Processing page 3/26
+2026-01-30 19:40:48,325 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:41:40,222 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:41:40,257 - src.services.ocr_service - INFO - Page 3 OCR complete. Confidence: 0.95, Text length: 594
+2026-01-30 19:41:40,257 - src.services.ocr_service - INFO - Processing page 4/26
+2026-01-30 19:41:40,446 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:42:33,832 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:42:33,852 - src.services.ocr_service - INFO - Page 4 OCR complete. Confidence: 0.95, Text length: 915
+2026-01-30 19:42:33,852 - src.services.ocr_service - INFO - Processing page 5/26
+2026-01-30 19:42:34,026 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:43:36,604 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:43:36,682 - src.services.ocr_service - INFO - Page 5 OCR complete. Confidence: 0.95, Text length: 825
+2026-01-30 19:43:36,683 - src.services.ocr_service - INFO - Processing page 6/26
+2026-01-30 19:43:36,869 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:44:34,769 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:44:34,789 - src.services.ocr_service - INFO - Page 6 OCR complete. Confidence: 0.95, Text length: 924
+2026-01-30 19:44:34,789 - src.services.ocr_service - INFO - Processing page 7/26
+2026-01-30 19:44:34,973 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:45:57,406 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:45:57,429 - src.services.ocr_service - INFO - Page 7 OCR complete. Confidence: 0.83, Text length: 577
+2026-01-30 19:45:57,429 - src.services.ocr_service - INFO - Processing page 8/26
+2026-01-30 19:45:57,615 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:47:17,855 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:47:17,876 - src.services.ocr_service - INFO - Page 8 OCR complete. Confidence: 0.95, Text length: 955
+2026-01-30 19:47:17,876 - src.services.ocr_service - INFO - Processing page 9/26
+2026-01-30 19:47:18,047 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:48:46,612 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:48:46,646 - src.services.ocr_service - INFO - Page 9 OCR complete. Confidence: 0.95, Text length: 781
+2026-01-30 19:48:46,646 - src.services.ocr_service - INFO - Processing page 10/26
+2026-01-30 19:48:46,842 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:50:19,025 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:50:19,042 - src.services.ocr_service - INFO - Page 10 OCR complete. Confidence: 0.95, Text length: 867
+2026-01-30 19:50:19,043 - src.services.ocr_service - INFO - Processing page 11/26
+2026-01-30 19:50:19,235 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:51:59,602 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:51:59,629 - src.services.ocr_service - INFO - Page 11 OCR complete. Confidence: 0.95, Text length: 837
+2026-01-30 19:51:59,629 - src.services.ocr_service - INFO - Processing page 12/26
+2026-01-30 19:51:59,836 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:53:17,703 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:53:17,900 - src.services.ocr_service - INFO - Page 12 OCR complete. Confidence: 0.95, Text length: 1024
+2026-01-30 19:53:17,900 - src.services.ocr_service - INFO - Processing page 13/26
+2026-01-30 19:53:18,085 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:55:58,583 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:55:58,602 - src.services.ocr_service - INFO - Page 13 OCR complete. Confidence: 0.95, Text length: 809
+2026-01-30 19:55:58,603 - src.services.ocr_service - INFO - Processing page 14/26
+2026-01-30 19:55:58,796 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:56:59,438 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:56:59,445 - src.services.ocr_service - INFO - Page 14 OCR complete. Confidence: 0.95, Text length: 695
+2026-01-30 19:56:59,446 - src.services.ocr_service - INFO - Processing page 15/26
+2026-01-30 19:56:59,639 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:58:06,187 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:58:06,205 - src.services.ocr_service - INFO - Page 15 OCR complete. Confidence: 0.95, Text length: 1014
+2026-01-30 19:58:06,205 - src.services.ocr_service - INFO - Processing page 16/26
+2026-01-30 19:58:06,394 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:59:01,884 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:59:01,905 - src.services.ocr_service - INFO - Page 16 OCR complete. Confidence: 0.95, Text length: 715
+2026-01-30 19:59:01,905 - src.services.ocr_service - INFO - Processing page 17/26
+2026-01-30 19:59:02,085 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 19:59:52,663 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 19:59:52,698 - src.services.ocr_service - INFO - Page 17 OCR complete. Confidence: 0.95, Text length: 752
+2026-01-30 19:59:52,699 - src.services.ocr_service - INFO - Processing page 18/26
+2026-01-30 19:59:52,975 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:00:57,553 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:00:57,644 - src.services.ocr_service - INFO - Page 18 OCR complete. Confidence: 0.95, Text length: 908
+2026-01-30 20:00:57,644 - src.services.ocr_service - INFO - Processing page 19/26
+2026-01-30 20:00:57,866 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:02:42,427 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:02:42,465 - src.services.ocr_service - INFO - Page 19 OCR complete. Confidence: 0.95, Text length: 759
+2026-01-30 20:02:42,465 - src.services.ocr_service - INFO - Processing page 20/26
+2026-01-30 20:02:42,678 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:04:45,288 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:04:45,329 - src.services.ocr_service - INFO - Page 20 OCR complete. Confidence: 0.67, Text length: 608
+2026-01-30 20:04:45,329 - src.services.ocr_service - INFO - Processing page 21/26
+2026-01-30 20:04:45,558 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:06:39,112 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:06:39,186 - src.services.ocr_service - INFO - Page 21 OCR complete. Confidence: 0.95, Text length: 602
+2026-01-30 20:06:39,186 - src.services.ocr_service - INFO - Processing page 22/26
+2026-01-30 20:06:39,394 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:08:35,632 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:08:35,654 - src.services.ocr_service - INFO - Page 22 OCR complete. Confidence: 0.95, Text length: 791
+2026-01-30 20:08:35,655 - src.services.ocr_service - INFO - Processing page 23/26
+2026-01-30 20:08:35,943 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:09:23,895 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:09:23,918 - src.services.ocr_service - INFO - Page 23 OCR complete. Confidence: 0.95, Text length: 844
+2026-01-30 20:09:23,919 - src.services.ocr_service - INFO - Processing page 24/26
+2026-01-30 20:09:24,252 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:10:34,914 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:10:34,931 - src.services.ocr_service - INFO - Page 24 OCR complete. Confidence: 0.95, Text length: 914
+2026-01-30 20:10:34,932 - src.services.ocr_service - INFO - Processing page 25/26
+2026-01-30 20:10:35,355 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:11:38,696 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:11:38,718 - src.services.ocr_service - INFO - Page 25 OCR complete. Confidence: 0.95, Text length: 765
+2026-01-30 20:11:38,719 - src.services.ocr_service - INFO - Processing page 26/26
+2026-01-30 20:11:39,048 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:13:32,605 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:13:32,648 - src.services.ocr_service - INFO - Page 26 OCR complete. Confidence: 0.95, Text length: 525
+2026-01-30 20:13:32,662 - src.services.ocr_service - INFO - OCR complete for all 26 pages. Total time: 2044642ms
+2026-01-30 20:13:32,663 - src.services.orchestrator_service - INFO - OCR Statistics:
+2026-01-30 20:13:32,664 - src.services.orchestrator_service - INFO -   - Pages processed: 26
+2026-01-30 20:13:32,664 - src.services.orchestrator_service - INFO -   - Total characters extracted: 21588
+2026-01-30 20:13:32,664 - src.services.orchestrator_service - INFO -   - Average confidence: 93.5%
+2026-01-30 20:13:32,664 - src.services.orchestrator_service - INFO -   - Provider: Gemini Vision
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - OCR Phase Complete: 26 pages processed
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - Total OCR time: 2044642ms
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - 
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - PHASE 2: PAGE-BY-PAGE EVALUATION
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - --------------------------------------------------------------------------------
+2026-01-30 20:13:32,665 - src.services.orchestrator_service - INFO - Starting page-by-page evaluation...
+2026-01-30 20:13:32,666 - src.services.evaluation_service - INFO - Starting document evaluation. Pages: 26
+2026-01-30 20:13:32,666 - src.services.evaluation_service - INFO - Evaluating page 1/26
+2026-01-30 20:13:32,667 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:13:41,691 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:13:41,699 - src.services.evaluation_service - INFO - Page 1 evaluated: 0.0/10.0 (0.0%)
+2026-01-30 20:13:41,699 - src.services.evaluation_service - INFO - Evaluating page 2/26
+2026-01-30 20:13:41,700 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:13:48,512 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:13:48,520 - src.services.evaluation_service - INFO - Page 2 evaluated: 3.5/10.0 (35.0%)
+2026-01-30 20:13:48,520 - src.services.evaluation_service - INFO - Evaluating page 3/26
+2026-01-30 20:13:48,520 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:13:55,448 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:13:55,452 - src.services.evaluation_service - INFO - Page 3 evaluated: 4.0/10.0 (40.0%)
+2026-01-30 20:13:55,453 - src.services.evaluation_service - INFO - Evaluating page 4/26
+2026-01-30 20:13:55,453 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:03,576 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:03,583 - src.services.evaluation_service - INFO - Page 4 evaluated: 4.5/10.0 (45.0%)
+2026-01-30 20:14:03,583 - src.services.evaluation_service - INFO - Evaluating page 5/26
+2026-01-30 20:14:03,583 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:11,549 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:11,556 - src.services.evaluation_service - INFO - Page 5 evaluated: 6.5/10.0 (65.0%)
+2026-01-30 20:14:11,556 - src.services.evaluation_service - INFO - Evaluating page 6/26
+2026-01-30 20:14:11,556 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:18,430 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:18,434 - src.services.evaluation_service - INFO - Page 6 evaluated: 3.0/10.0 (30.0%)
+2026-01-30 20:14:18,434 - src.services.evaluation_service - INFO - Evaluating page 7/26
+2026-01-30 20:14:18,436 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:25,477 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:25,482 - src.services.evaluation_service - INFO - Page 7 evaluated: 6.5/10.0 (65.0%)
+2026-01-30 20:14:25,482 - src.services.evaluation_service - INFO - Evaluating page 8/26
+2026-01-30 20:14:25,482 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:34,060 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:34,068 - src.services.evaluation_service - INFO - Page 8 evaluated: 3.5/10.0 (35.0%)
+2026-01-30 20:14:34,068 - src.services.evaluation_service - INFO - Evaluating page 9/26
+2026-01-30 20:14:34,069 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:41,127 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:41,132 - src.services.evaluation_service - INFO - Page 9 evaluated: 6.5/10.0 (65.0%)
+2026-01-30 20:14:41,132 - src.services.evaluation_service - INFO - Evaluating page 10/26
+2026-01-30 20:14:41,132 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:49,216 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:49,220 - src.services.evaluation_service - INFO - Page 10 evaluated: 2.5/10.0 (25.0%)
+2026-01-30 20:14:49,221 - src.services.evaluation_service - INFO - Evaluating page 11/26
+2026-01-30 20:14:49,221 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:14:56,163 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:14:56,170 - src.services.evaluation_service - INFO - Page 11 evaluated: 4.0/10.0 (40.0%)
+2026-01-30 20:14:56,170 - src.services.evaluation_service - INFO - Evaluating page 12/26
+2026-01-30 20:14:56,170 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:02,201 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:02,205 - src.services.evaluation_service - INFO - Page 12 evaluated: 3.0/10.0 (30.0%)
+2026-01-30 20:15:02,205 - src.services.evaluation_service - INFO - Evaluating page 13/26
+2026-01-30 20:15:02,206 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:09,953 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:09,958 - src.services.evaluation_service - INFO - Page 13 evaluated: 5.5/10.0 (55.0%)
+2026-01-30 20:15:09,958 - src.services.evaluation_service - INFO - Evaluating page 14/26
+2026-01-30 20:15:09,958 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:18,457 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:18,461 - src.services.evaluation_service - INFO - Page 14 evaluated: 3.0/10.0 (30.0%)
+2026-01-30 20:15:18,461 - src.services.evaluation_service - INFO - Evaluating page 15/26
+2026-01-30 20:15:18,461 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:26,112 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:26,118 - src.services.evaluation_service - INFO - Page 15 evaluated: 3.5/10.0 (35.0%)
+2026-01-30 20:15:26,119 - src.services.evaluation_service - INFO - Evaluating page 16/26
+2026-01-30 20:15:26,119 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:33,732 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:33,739 - src.services.evaluation_service - INFO - Page 16 evaluated: 4.0/10.0 (40.0%)
+2026-01-30 20:15:33,739 - src.services.evaluation_service - INFO - Evaluating page 17/26
+2026-01-30 20:15:33,740 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:41,765 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:41,766 - src.services.evaluation_service - INFO - Page 17 evaluated: 4.5/10.0 (45.0%)
+2026-01-30 20:15:41,766 - src.services.evaluation_service - INFO - Evaluating page 18/26
+2026-01-30 20:15:41,767 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:49,871 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:49,877 - src.services.evaluation_service - INFO - Page 18 evaluated: 3.5/10.0 (35.0%)
+2026-01-30 20:15:49,878 - src.services.evaluation_service - INFO - Evaluating page 19/26
+2026-01-30 20:15:49,878 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:15:56,681 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:15:56,683 - src.services.evaluation_service - INFO - Page 19 evaluated: 7.0/10.0 (70.0%)
+2026-01-30 20:15:56,684 - src.services.evaluation_service - INFO - Evaluating page 20/26
+2026-01-30 20:15:56,684 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:03,788 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:03,797 - src.services.evaluation_service - INFO - Page 20 evaluated: 4.5/10.0 (45.0%)
+2026-01-30 20:16:03,797 - src.services.evaluation_service - INFO - Evaluating page 21/26
+2026-01-30 20:16:03,798 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:10,192 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:10,203 - src.services.evaluation_service - INFO - Page 21 evaluated: 1.5/10.0 (15.0%)
+2026-01-30 20:16:10,204 - src.services.evaluation_service - INFO - Evaluating page 22/26
+2026-01-30 20:16:10,205 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:17,192 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:17,197 - src.services.evaluation_service - INFO - Page 22 evaluated: 3.5/10.0 (35.0%)
+2026-01-30 20:16:17,198 - src.services.evaluation_service - INFO - Evaluating page 23/26
+2026-01-30 20:16:17,198 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:25,689 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:25,697 - src.services.evaluation_service - INFO - Page 23 evaluated: 4.0/10.0 (40.0%)
+2026-01-30 20:16:25,698 - src.services.evaluation_service - INFO - Evaluating page 24/26
+2026-01-30 20:16:25,698 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:33,317 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:33,321 - src.services.evaluation_service - INFO - Page 24 evaluated: 3.0/10.0 (30.0%)
+2026-01-30 20:16:33,322 - src.services.evaluation_service - INFO - Evaluating page 25/26
+2026-01-30 20:16:33,323 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:40,617 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:40,623 - src.services.evaluation_service - INFO - Page 25 evaluated: 4.0/10.0 (40.0%)
+2026-01-30 20:16:40,624 - src.services.evaluation_service - INFO - Evaluating page 26/26
+2026-01-30 20:16:40,624 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-01-30 20:16:49,182 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent "HTTP/1.1 200 OK"
+2026-01-30 20:16:49,188 - src.services.evaluation_service - INFO - Page 26 evaluated: 6.0/10.0 (60.0%)
+2026-01-30 20:16:49,190 - src.services.evaluation_service - INFO - Document evaluation complete: 105.0/260.0 (40.38%) - Grade: D
+2026-01-30 20:16:49,190 - src.services.orchestrator_service - INFO - Evaluation Statistics:
+2026-01-30 20:16:49,190 - src.services.orchestrator_service - INFO -   - Pages evaluated: 26
+2026-01-30 20:16:49,190 - src.services.orchestrator_service - INFO -   - Total marks: 105.0/260.0
+2026-01-30 20:16:49,191 - src.services.orchestrator_service - INFO -   - Percentage: 40.38%
+2026-01-30 20:16:49,191 - src.services.orchestrator_service - INFO -   - Grade: D
+2026-01-30 20:16:49,191 - src.services.orchestrator_service - INFO - Evaluation Phase Complete
+2026-01-30 20:16:49,192 - src.services.orchestrator_service - INFO - Final Score: 105.0/260.0 (40.38%) - Grade: D
+2026-01-30 20:16:49,192 - src.services.orchestrator_service - INFO - 
+2026-01-30 20:16:49,192 - src.services.orchestrator_service - INFO - PHASE 3: PDF ANNOTATION
+2026-01-30 20:16:49,192 - src.services.orchestrator_service - INFO - --------------------------------------------------------------------------------
+2026-01-30 20:16:49,193 - src.services.orchestrator_service - INFO - Starting PDF annotation...
+2026-01-30 20:16:49,199 - src.services.pdf_annotation_service - INFO - Annotating PDF: /tmp/answer_sheet_evaluator/783bee61-37fb-4ee3-8926-83b98488795f.pdf
+2026-01-30 20:16:49,199 - src.services.pdf_annotation_service - INFO - Output path: /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf
+2026-01-30 20:16:49,640 - src.services.pdf_annotation_service - INFO - Annotated PDF saved: /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf
+2026-01-30 20:16:49,642 - src.services.orchestrator_service - INFO - PDF annotated successfully: /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf
+2026-01-30 20:16:49,643 - src.services.orchestrator_service - INFO - Annotation Phase Complete: /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf
+2026-01-30 20:16:49,643 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 20:16:49,643 - src.services.orchestrator_service - INFO - EVALUATION PIPELINE COMPLETED SUCCESSFULLY
+2026-01-30 20:16:49,643 - src.services.orchestrator_service - INFO - Total processing time: 196.52s
+2026-01-30 20:16:49,643 - src.services.orchestrator_service - INFO - ================================================================================
+2026-01-30 20:16:49,644 - src.routes - INFO - Evaluation completed successfully!
+2026-01-30 20:16:49,644 - src.routes - INFO - Final score: 105.0/260.0 (40.38%) - Grade: D
+2026-01-30 20:16:49,649 - src.routes - INFO - Returning annotated PDF: evaluated_Durgesh Yadav GS 5&6 Test1.pdf
+2026-01-30 20:16:49,649 - src.routes - INFO - ================================================================================
+2026-01-30 20:16:49,651 - src.file_utils - INFO - Cleaning up 2 temporary files
+2026-01-30 20:16:49,670 - src.file_utils - INFO - Cleanup complete: 2 removed, 0 failed
+2026-01-30 20:16:49,699 - main - ERROR - Unhandled exception: File at path /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf does not exist.
+Traceback (most recent call last):
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/responses.py", line 349, in __call__
+    stat_result = await anyio.to_thread.run_sync(os.stat, self.path)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2502, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 986, in run
+    result = context.run(func, *args)
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/home/anand/.local/share/uv/python/cpython-3.13.10-linux-x86_64-gnu/lib/python3.13/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anand/yoyo/copy-checker-fastapi/main.py", line 119, in log_requests
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 115, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 102, in app
+    await response(scope, receive, send)
+  File "/home/anand/yoyo/copy-checker-fastapi/.venv/lib/python3.13/site-packages/starlette/responses.py", line 352, in __call__
+    raise RuntimeError(f"File at path {self.path} does not exist.")
+RuntimeError: File at path /tmp/answer_sheet_evaluator/8881bc64-327d-42ae-9f8e-2b2e5f83eb2f_evaluated.pdf does not exist.
+2026-01-30 22:24:01,386 - main - INFO - ================================================================================
+2026-01-30 22:24:01,394 - main - INFO - SHUTTING DOWN AI ANSWER SHEET EVALUATOR
+2026-01-30 22:24:01,394 - main - INFO - ================================================================================
+2026-01-30 22:24:03,503 - main - INFO - ================================================================================
+2026-01-30 22:24:03,503 - main - INFO - STARTING AI ANSWER SHEET EVALUATOR
+2026-01-30 22:24:03,503 - main - INFO - Version: 2.0.0
+2026-01-30 22:24:03,503 - main - INFO - ================================================================================
+2026-01-30 22:24:03,503 - main - INFO - ✓ GEMINI_API_KEY configured
+2026-01-30 22:24:03,503 - main - INFO - Service architecture:
+2026-01-30 22:24:03,503 - main - INFO -   Phase 1: OCR Text Extraction (Gemini Vision)
+2026-01-30 22:24:03,503 - main - INFO -   Phase 2: Page-by-Page Evaluation (Gemini LLM)
+2026-01-30 22:24:03,503 - main - INFO -   Phase 3: PDF Annotation (PyMuPDF)
+2026-01-30 22:24:03,503 - main - INFO - 
+2026-01-30 22:24:03,503 - main - INFO - Available endpoints:
+2026-01-30 22:24:03,504 - main - INFO -   POST /evaluate - Main evaluation endpoint
+2026-01-30 22:24:03,504 - main - INFO -   GET  /health   - Health check
+2026-01-30 22:24:03,504 - main - INFO -   GET  /info     - Service information
+2026-01-30 22:24:03,504 - main - INFO -   GET  /docs     - API documentation
+2026-01-30 22:24:03,504 - main - INFO - ================================================================================
+2026-01-30 22:25:10,036 - main - INFO - ================================================================================
+2026-01-30 22:25:10,037 - main - INFO - SHUTTING DOWN AI ANSWER SHEET EVALUATOR
+2026-01-30 22:25:10,037 - main - INFO - ================================================================================
+2026-01-30 22:25:11,343 - main - INFO - ================================================================================
+2026-01-30 22:25:11,344 - main - INFO - STARTING AI ANSWER SHEET EVALUATOR
+2026-01-30 22:25:11,344 - main - INFO - Version: 2.0.0
+2026-01-30 22:25:11,344 - main - INFO - ================================================================================
+2026-01-30 22:25:11,344 - main - INFO - ✓ GEMINI_API_KEY configured
+2026-01-30 22:25:11,344 - main - INFO - Service architecture:
+2026-01-30 22:25:11,344 - main - INFO -   Phase 1: OCR Text Extraction (Gemini Vision)
+2026-01-30 22:25:11,344 - main - INFO -   Phase 2: Page-by-Page Evaluation (Gemini LLM)
+2026-01-30 22:25:11,344 - main - INFO -   Phase 3: PDF Annotation (PyMuPDF)
+2026-01-30 22:25:11,344 - main - INFO - 
+2026-01-30 22:25:11,344 - main - INFO - Available endpoints:
+2026-01-30 22:25:11,344 - main - INFO -   POST /evaluate - Main evaluation endpoint
+2026-01-30 22:25:11,344 - main - INFO -   GET  /health   - Health check
+2026-01-30 22:25:11,344 - main - INFO -   GET  /info     - Service information
+2026-01-30 22:25:11,344 - main - INFO -   GET  /docs     - API documentation
+2026-01-30 22:25:11,344 - main - INFO - ================================================================================

@@ -1,5 +1,4 @@
 # src/services/pdf_annotation_service.py
-# FIXED VERSION - More robust annotation with better error handling
 
 import fitz  # PyMuPDF
 import logging
@@ -8,19 +7,24 @@ from typing import List
 
 from src.schemas import PageEvaluation, AnnotationConfig, EvaluationSummary
 
-# Configure logger
 logger = logging.getLogger(__name__)
 
 
 class PDFAnnotationService:
-    """Service for annotating PDFs with evaluation marks and remarks"""
+    """Service for annotating PDFs with evaluation results"""
     
     def __init__(self, config: AnnotationConfig = None):
-        """Initialize PDF annotation service"""
+        """
+        Initialize PDF annotation service
+        
+        Args:
+            config: Annotation configuration
+        """
         logger.info("Initializing PDFAnnotationService")
         self.config = config or AnnotationConfig()
-        logger.info(f"Annotation config: font_size={self.config.font_size}, "
-                   f"color={self.config.font_color}")
+        logger.info(f"Configuration: font_size={self.config.font_size}, "
+                   f"show_remarks={self.config.show_remarks}, "
+                   f"show_marks={self.config.show_marks}")
     
     def annotate_pdf(
         self,
@@ -30,26 +34,24 @@ class PDFAnnotationService:
         summary: EvaluationSummary
     ) -> Path:
         """
-        Annotate PDF with evaluation marks and remarks
+        Annotate PDF with evaluation results
         
         Args:
             input_pdf_path: Path to original PDF
-            output_pdf_path: Path to save annotated PDF
+            output_pdf_path: Path for annotated output
             evaluations: List of page evaluations
             summary: Overall evaluation summary
             
         Returns:
             Path to annotated PDF
         """
-        logger.info(f"Starting PDF annotation: {input_pdf_path} -> {output_pdf_path}")
-        logger.info(f"Annotating {len(evaluations)} pages")
+        logger.info(f"Annotating PDF: {input_pdf_path}")
+        logger.info(f"Output path: {output_pdf_path}")
         
         doc = None
         try:
-            # Open original PDF
-            logger.debug(f"Opening PDF: {input_pdf_path}")
+            # Open PDF
             doc = fitz.open(input_pdf_path)
-            logger.debug(f"PDF opened. Total pages: {len(doc)}")
             
             if len(doc) == 0:
                 raise ValueError("PDF has no pages")
@@ -57,422 +59,278 @@ class PDFAnnotationService:
             # Create evaluation lookup
             eval_map = {eval.page_number: eval for eval in evaluations}
             
-            # Annotate each page with comprehensive error handling
+            # Annotate each page
             for page_num in range(len(doc)):
                 page = doc[page_num]
-                page_eval = eval_map.get(page_num + 1)  # 1-indexed
+                page_eval = eval_map.get(page_num + 1)
                 
                 if page_eval:
-                    logger.debug(f"Annotating page {page_num + 1}")
                     try:
-                        self._annotate_page_safe(page, page_eval, page_num + 1)
+                        self._annotate_page(page, page_eval)
+                        logger.debug(f"Page {page_num + 1} annotated successfully")
                     except Exception as e:
-                        logger.error(f"Failed to annotate page {page_num + 1}: {str(e)}", exc_info=True)
-                        # Continue to next page instead of failing entire process
+                        logger.error(f"Failed to annotate page {page_num + 1}: {e}")
                         continue
-                else:
-                    logger.warning(f"No evaluation found for page {page_num + 1}")
             
             # Add summary to last page
-            if len(doc) > 0:
-                logger.debug("Adding evaluation summary to last page")
+            if self.config.show_summary and len(doc) > 0:
                 try:
-                    last_page = doc[-1]
-                    self._add_summary_to_page_safe(last_page, summary)
+                    self._add_summary_page(doc[-1], summary)
+                    logger.debug("Summary added to last page")
                 except Exception as e:
-                    logger.error(f"Failed to add summary: {str(e)}", exc_info=True)
-                    # Non-critical, continue anyway
+                    logger.error(f"Failed to add summary: {e}")
             
             # Save annotated PDF
-            logger.debug(f"Saving annotated PDF to: {output_pdf_path}")
             doc.save(str(output_pdf_path), garbage=4, deflate=True, clean=True)
-            logger.info(f"PDF annotation complete: {output_pdf_path}")
+            logger.info(f"Annotated PDF saved: {output_pdf_path}")
             
             return output_pdf_path
             
         except Exception as e:
-            logger.error(f"Failed to annotate PDF: {str(e)}", exc_info=True)
+            logger.error(f"PDF annotation failed: {e}", exc_info=True)
             raise Exception(f"Failed to annotate PDF: {str(e)}")
         
         finally:
-            # Always close document
             if doc:
                 doc.close()
-                logger.debug("PDF document closed")
     
-    def _annotate_page_safe(
-        self,
-        page: fitz.Page,
-        evaluation: PageEvaluation,
-        page_number: int
-    ) -> None:
+    def _annotate_page(self, page: fitz.Page, evaluation: PageEvaluation) -> None:
         """
-        Annotate a single page with marks and remarks (with error handling)
+        Annotate a single page with marks and remarks
         
         Args:
             page: PyMuPDF page object
             evaluation: Page evaluation data
-            page_number: Page number (1-indexed)
         """
-        logger.debug(f"[Page {page_number}] Starting page annotation")
+        rect = page.rect
+        page_width = rect.width
+        page_height = rect.height
         
-        try:
-            # Get page dimensions
-            rect = page.rect
-            page_width = rect.width
-            page_height = rect.height
-            logger.debug(f"[Page {page_number}] Page dimensions: {page_width:.1f}x{page_height:.1f}")
-            
-            # Validate page dimensions
-            if page_width < 100 or page_height < 100:
-                logger.warning(f"[Page {page_number}] Page too small, skipping annotation")
-                return
-            
-            # Position for remarks (top-right area)
-            remarks_x = max(page_width - 210, 10)  # Ensure not off-page
-            remarks_y = 20
-            
-            # Position for marks (bottom-right corner)
-            marks_x = max(page_width - 160, 10)
-            marks_y = max(page_height - 60, page_height - 80)
-            
-            # Add remarks with background box
-            logger.debug(f"[Page {page_number}] Adding remark box at ({remarks_x:.1f}, {remarks_y:.1f})")
-            try:
-                self._add_remark_box_safe(page, remarks_x, remarks_y, evaluation.remarks, page_width, page_height)
-            except Exception as e:
-                logger.error(f"[Page {page_number}] Failed to add remark box: {e}")
-                # Try simple text fallback
-                try:
-                    self._add_simple_text(page, remarks_x, remarks_y, evaluation.remarks[:50])
-                except:
-                    pass
-            
-            # Add marks at bottom
-            marks_text = f"Marks: {evaluation.marks_awarded}/{evaluation.max_marks}"
-            logger.debug(f"[Page {page_number}] Adding marks text at ({marks_x:.1f}, {marks_y:.1f}): {marks_text}")
-            try:
-                self._add_marks_text_safe(page, marks_x, marks_y, marks_text, page_width, page_height)
-            except Exception as e:
-                logger.error(f"[Page {page_number}] Failed to add marks text: {e}")
-                # Try simple text fallback
-                try:
-                    self._add_simple_text(page, marks_x, marks_y, marks_text)
-                except:
-                    pass
-            
-            logger.debug(f"[Page {page_number}] Page annotation complete")
-            
-        except Exception as e:
-            logger.error(f"[Page {page_number}] Error in page annotation: {e}", exc_info=True)
-            raise
+        # Validate page dimensions
+        if page_width < 100 or page_height < 100:
+            logger.warning(f"Page {evaluation.page_number} too small for annotation")
+            return
+        
+        # Add remarks at top-right
+        if self.config.show_remarks and evaluation.remarks:
+            self._add_remarks_box(page, evaluation, page_width, page_height)
+        
+        # Add marks at bottom-right
+        if self.config.show_marks:
+            self._add_marks_box(page, evaluation, page_width, page_height)
     
-    def _add_remark_box_safe(
+    def _add_remarks_box(
         self,
         page: fitz.Page,
-        x: float,
-        y: float,
-        remark: str,
+        evaluation: PageEvaluation,
         page_width: float,
         page_height: float
     ) -> None:
-        """
-        Add remark with background box (safe version)
+        """Add remarks box to page"""
         
-        Args:
-            page: PyMuPDF page object
-            x, y: Position coordinates
-            remark: Remark text
-            page_width, page_height: Page dimensions
-        """
-        try:
-            # Sanitize and truncate remark
-            remark = str(remark).strip()
-            if not remark or remark == "":
-                remark = "Answer evaluated."
-            
-            max_length = 120
-            original_length = len(remark)
-            if len(remark) > max_length:
-                remark = remark[:max_length-3] + "..."
-                logger.debug(f"Remark truncated from {original_length} to {len(remark)} characters")
-            
-            # Font configuration - use built-in fonts only
-            font_size = max(8, min(self.config.font_size, 12))  # Clamp between 8-12
-            fontname = "helv"  # Built-in Helvetica
-            
-            # Calculate box dimensions
-            max_width = min(190, page_width - x - 10)  # Don't overflow page
-            if max_width < 50:
-                logger.warning("Not enough space for remark box")
-                return
-            
-            # Split into lines if needed
-            words = remark.split()
-            lines = []
-            current_line = []
-            current_width = 0
-            char_width = font_size * 0.5
-            
-            for word in words:
-                word_width = len(word) * char_width
-                space_width = char_width
-                
-                if current_width + word_width + space_width < max_width:
-                    current_line.append(word)
-                    current_width += word_width + space_width
-                else:
-                    if current_line:
-                        lines.append(' '.join(current_line))
-                    current_line = [word]
-                    current_width = word_width
-            
-            if current_line:
-                lines.append(' '.join(current_line))
-            
-            # Limit to 3 lines
-            lines = lines[:3]
-            remark_text = '\n'.join(lines)
-            
-            line_height = font_size + 4
-            text_height = (len(lines) * line_height) + 8
-            
-            # Ensure box doesn't overflow page
-            if y + text_height > page_height:
-                y = page_height - text_height - 10
-            
-            # Draw semi-transparent background box
-            box_rect = fitz.Rect(
-                max(x - 5, 0),
-                max(y - 5, 0),
-                min(x + max_width + 5, page_width),
-                min(y + text_height, page_height)
-            )
-            
-            logger.debug(f"Drawing remark box: {box_rect}")
-            
-            # Yellow background with border
-            page.draw_rect(
-                box_rect,
-                color=(0.8, 0.8, 0),  # Dark yellow border
-                fill=(1, 1, 0.9),     # Light yellow fill
-                width=1.5
-            )
-            
-            # Add text using insert_textbox
-            text_rect = fitz.Rect(
-                x,
-                y,
-                min(x + max_width, page_width - 5),
-                min(y + text_height - 5, page_height - 5)
-            )
-            
-            # Insert text
-            rc = page.insert_textbox(
-                text_rect,
-                remark_text,
-                fontsize=font_size,
-                fontname=fontname,
-                color=(0, 0, 0),  # Black text
-                align=fitz.TEXT_ALIGN_LEFT
-            )
-            
-            if rc < 0:
-                logger.warning(f"insert_textbox returned {rc}, text may not fit")
-            
-            logger.debug("Remark box added successfully")
-            
-        except Exception as e:
-            logger.error(f"Error in _add_remark_box_safe: {e}", exc_info=True)
-            raise
+        # Position: top-right corner
+        box_width = min(220, page_width * 0.35)
+        x = page_width - box_width - 15
+        y = 15
+        
+        # Prepare remark text
+        remark = evaluation.remarks[:150]
+        
+        # Create text box dimensions
+        font_size = self.config.font_size
+        line_height = font_size + 4
+        
+        # Split text into lines
+        lines = self._wrap_text(remark, box_width - 10, font_size)
+        text_height = len(lines) * line_height + 10
+        
+        # Draw background
+        bg_rect = fitz.Rect(
+            x - 5,
+            y - 5,
+            min(x + box_width + 5, page_width),
+            min(y + text_height + 5, page_height)
+        )
+        
+        page.draw_rect(
+            bg_rect,
+            color=(0.8, 0.8, 0),  # Dark yellow border
+            fill=(1, 1, 0.9),     # Light yellow fill
+            width=1.5
+        )
+        
+        # Add text
+        text_rect = fitz.Rect(
+            x,
+            y,
+            min(x + box_width, page_width - 10),
+            min(y + text_height, page_height - 10)
+        )
+        
+        text_content = '\n'.join(lines)
+        page.insert_textbox(
+            text_rect,
+            text_content,
+            fontsize=font_size,
+            fontname="helv",
+            color=(0, 0, 0),
+            align=fitz.TEXT_ALIGN_LEFT
+        )
     
-    def _add_marks_text_safe(
+    def _add_marks_box(
         self,
         page: fitz.Page,
-        x: float,
-        y: float,
-        marks_text: str,
+        evaluation: PageEvaluation,
         page_width: float,
         page_height: float
     ) -> None:
-        """
-        Add marks text with box (safe version)
+        """Add marks box to page"""
         
-        Args:
-            page: PyMuPDF page object
-            x, y: Position coordinates
-            marks_text: Marks text (e.g., "Marks: 8/10")
-            page_width, page_height: Page dimensions
-        """
-        try:
-            logger.debug(f"Adding marks text: {marks_text}")
-            
-            font_size = max(10, min(self.config.font_size + 2, 14))  # Clamp 10-14
-            fontname = "hebo"  # Built-in Helvetica Bold
-            
-            # Calculate box dimensions
-            box_width = 145
-            box_height = 28
-            
-            # Ensure box fits on page
-            if x + box_width > page_width:
-                x = page_width - box_width - 5
-            if y + box_height > page_height:
-                y = page_height - box_height - 5
-            
-            # Draw box
-            box_rect = fitz.Rect(
-                max(x - 5, 0),
-                max(y - 15, 0),
-                min(x + box_width, page_width),
-                min(y + 12, page_height)
-            )
-            
-            logger.debug(f"Drawing marks box: {box_rect}")
-            
-            page.draw_rect(
-                box_rect,
-                color=(0.8, 0, 0),      # Dark red border
-                fill=(1, 0.95, 0.95),   # Light red background
-                width=2
-            )
-            
-            # Add text using insert_textbox
-            text_rect = fitz.Rect(
-                x,
-                y - 12,
-                min(x + box_width - 10, page_width - 5),
-                min(y + 8, page_height - 5)
-            )
-            
-            # Insert text
-            rc = page.insert_textbox(
-                text_rect,
-                marks_text,
-                fontsize=font_size,
-                fontname=fontname,
-                color=(0.8, 0, 0),  # Dark red
-                align=fitz.TEXT_ALIGN_LEFT
-            )
-            
-            if rc < 0:
-                logger.warning(f"insert_textbox returned {rc}, text may not fit")
-            
-            logger.debug("Marks text added successfully")
-            
-        except Exception as e:
-            logger.error(f"Error in _add_marks_text_safe: {e}", exc_info=True)
-            raise
-    
-    def _add_simple_text(
-        self,
-        page: fitz.Page,
-        x: float,
-        y: float,
-        text: str
-    ) -> None:
-        """
-        Fallback: Add simple text without box
-        """
-        try:
-            logger.debug(f"Adding simple fallback text at ({x:.1f}, {y:.1f})")
-            point = fitz.Point(x, y)
-            page.insert_text(
-                point,
-                text[:100],  # Limit length
-                fontsize=10,
-                fontname="helv",
-                color=(0, 0, 0)
-            )
-            logger.debug("Simple text added")
-        except Exception as e:
-            logger.error(f"Even simple text failed: {e}")
-    
-    def _add_summary_to_page_safe(
-        self,
-        page: fitz.Page,
-        summary: EvaluationSummary
-    ) -> None:
-        """
-        Add evaluation summary to page (safe version)
+        # Position: bottom-right corner
+        box_width = 150
+        box_height = 35
+        x = page_width - box_width - 15
+        y = page_height - box_height - 15
         
-        Args:
-            page: PyMuPDF page object
-            summary: Evaluation summary
-        """
-        try:
-            logger.debug("Adding evaluation summary")
-            
-            # Get page dimensions
-            rect = page.rect
-            page_width = rect.width
-            page_height = rect.height
-            
-            # Position for summary (bottom center)
-            box_width = 240
-            box_height = 80
-            summary_x = max((page_width / 2) - (box_width / 2), 10)
-            summary_y = max(page_height - box_height - 20, 10)
-            
-            logger.debug(f"Summary position: ({summary_x:.1f}, {summary_y:.1f})")
-            
-            # Create summary text
-            summary_text = f"""EVALUATION SUMMARY
+        # Draw box
+        box_rect = fitz.Rect(
+            x - 5,
+            y - 5,
+            min(x + box_width + 5, page_width),
+            min(y + box_height + 5, page_height)
+        )
+        
+        page.draw_rect(
+            box_rect,
+            color=(0.8, 0, 0),      # Dark red border
+            fill=(1, 0.95, 0.95),   # Light red fill
+            width=2
+        )
+        
+        # Add marks text
+        marks_text = f"Marks: {evaluation.marks_awarded}/{evaluation.max_marks}"
+        percentage = (evaluation.marks_awarded / evaluation.max_marks * 100) if evaluation.max_marks > 0 else 0
+        percentage_text = f"({percentage:.0f}%)"
+        
+        # Main marks text
+        text_rect = fitz.Rect(
+            x,
+            y,
+            min(x + box_width - 10, page_width - 10),
+            min(y + 20, page_height - 10)
+        )
+        
+        page.insert_textbox(
+            text_rect,
+            marks_text,
+            fontsize=self.config.font_size + 2,
+            fontname="hebo",  # Bold
+            color=(0.8, 0, 0),
+            align=fitz.TEXT_ALIGN_CENTER
+        )
+        
+        # Percentage text
+        pct_rect = fitz.Rect(
+            x,
+            y + 18,
+            min(x + box_width - 10, page_width - 10),
+            min(y + 32, page_height - 10)
+        )
+        
+        page.insert_textbox(
+            pct_rect,
+            percentage_text,
+            fontsize=self.config.font_size,
+            fontname="helv",
+            color=(0.6, 0, 0),
+            align=fitz.TEXT_ALIGN_CENTER
+        )
+    
+    def _add_summary_page(self, page: fitz.Page, summary: EvaluationSummary) -> None:
+        """Add evaluation summary to last page"""
+        
+        rect = page.rect
+        page_width = rect.width
+        page_height = rect.height
+        
+        # Position: bottom center
+        box_width = 300
+        box_height = 120
+        x = (page_width - box_width) / 2
+        y = page_height - box_height - 30
+        
+        # Draw box
+        box_rect = fitz.Rect(
+            x - 10,
+            y - 10,
+            min(x + box_width + 10, page_width),
+            min(y + box_height + 10, page_height)
+        )
+        
+        page.draw_rect(
+            box_rect,
+            color=(0, 0, 0.8),      # Blue border
+            fill=(0.95, 0.95, 1),   # Light blue fill
+            width=2
+        )
+        
+        # Create summary text
+        summary_text = f"""EVALUATION SUMMARY
+
 Total Pages: {summary.total_pages}
-Total Marks: {summary.total_marks_awarded}/{summary.total_max_marks}
-Percentage: {summary.percentage:.1f}%"""
+Total Marks: {summary.total_marks_awarded} / {summary.total_max_marks}
+Percentage: {summary.percentage:.1f}%
+Grade: {summary.grade}
+
+{summary.overall_remarks}"""
+        
+        # Add text
+        text_rect = fitz.Rect(
+            x,
+            y,
+            min(x + box_width - 20, page_width - 20),
+            min(y + box_height - 10, page_height - 10)
+        )
+        
+        page.insert_textbox(
+            text_rect,
+            summary_text,
+            fontsize=self.config.font_size,
+            fontname="hebo",
+            color=(0, 0, 0.6),
+            align=fitz.TEXT_ALIGN_LEFT
+        )
+    
+    def _wrap_text(self, text: str, max_width: float, font_size: int) -> List[str]:
+        """
+        Wrap text to fit within width
+        
+        Args:
+            text: Text to wrap
+            max_width: Maximum width in points
+            font_size: Font size
             
-            logger.debug(f"Summary text:\n{summary_text}")
-            
-            # Ensure box fits on page
-            if summary_x + box_width > page_width:
-                summary_x = page_width - box_width - 10
-            if summary_y + box_height > page_height:
-                summary_y = page_height - box_height - 10
-            
-            # Draw box
-            box_rect = fitz.Rect(
-                max(summary_x - 10, 0),
-                max(summary_y - 10, 0),
-                min(summary_x + box_width, page_width),
-                min(summary_y + box_height, page_height)
-            )
-            
-            logger.debug(f"Drawing summary box: {box_rect}")
-            
-            page.draw_rect(
-                box_rect,
-                color=(0, 0, 0.8),      # Blue border
-                fill=(0.95, 0.95, 1),   # Light blue background
-                width=2
-            )
-            
-            # Add text using insert_textbox
-            text_rect = fitz.Rect(
-                summary_x,
-                summary_y,
-                min(summary_x + box_width - 20, page_width - 10),
-                min(summary_y + box_height - 10, page_height - 10)
-            )
-            
-            # Use built-in bold font
-            font_size = 10
-            fontname = "hebo"  # Built-in Helvetica Bold
-            
-            rc = page.insert_textbox(
-                text_rect,
-                summary_text,
-                fontsize=font_size,
-                fontname=fontname,
-                color=(0, 0, 0.6),  # Dark blue
-                align=fitz.TEXT_ALIGN_LEFT
-            )
-            
-            if rc < 0:
-                logger.warning(f"Summary textbox returned {rc}, text may not fit")
-            
-            logger.debug("Evaluation summary added successfully")
-            
-        except Exception as e:
-            logger.error(f"Error adding summary: {e}", exc_info=True)
-            # Don't raise - summary is non-critical
+        Returns:
+            List of wrapped lines
+        """
+        words = text.split()
+        lines = []
+        current_line = []
+        
+        # Approximate character width
+        char_width = font_size * 0.5
+        max_chars = int(max_width / char_width)
+        
+        for word in words:
+            test_line = ' '.join(current_line + [word])
+            if len(test_line) <= max_chars:
+                current_line.append(word)
+            else:
+                if current_line:
+                    lines.append(' '.join(current_line))
+                current_line = [word]
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        return lines[:5]  # Limit to 5 lines
