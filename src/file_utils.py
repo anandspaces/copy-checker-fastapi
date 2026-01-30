@@ -1,11 +1,9 @@
 # src/file_utils.py
 
-import os
 import tempfile
 import uuid
 import logging
 from pathlib import Path
-from typing import BinaryIO
 import aiofiles
 from fastapi import UploadFile
 
@@ -110,13 +108,9 @@ class TempFileManager:
     def __enter__(self):
         return self
     
-    # def __exit__(self, exc_type, exc_val, exc_tb):
-    #     self.cleanup_all()
-    
-    # def __del__(self):
-    #     """Cleanup on garbage collection"""
-    #     if hasattr(self, '_created_files') and self._created_files:
-    #         self.cleanup_all()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Don't cleanup on exit to allow file download
+        pass
 
 
 def validate_pdf(filepath: Path) -> bool:

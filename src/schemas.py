@@ -1,7 +1,7 @@
 # src/schemas.py
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Dict
 from enum import Enum
 from datetime import datetime
 
@@ -11,104 +11,96 @@ class LLMProvider(str, Enum):
     GEMINI = "gemini"
 
 
-class OCRResult(BaseModel):
-    """OCR extraction result for a single page"""
-    page_number: int = Field(description="Page number (1-indexed)")
-    raw_text: str = Field(description="Extracted text from page")
-    confidence: float = Field(ge=0.0, le=1.0, default=0.0, description="OCR confidence score")
-    processing_time_ms: float = Field(ge=0, description="Time taken for OCR in milliseconds")
-    metadata: dict = Field(default_factory=dict, description="Additional OCR metadata")
+class PaperMetadata(BaseModel):
+    """Metadata extracted from first page"""
+    subject: Optional[str] = Field(default=None, description="Subject name from paper")
+    total_marks: Optional[float] = Field(default=None, description="Total marks from paper")
+    student_name: Optional[str] = Field(default=None, description="Student name if found")
+    roll_number: Optional[str] = Field(default=None, description="Roll number if found")
+    exam_date: Optional[str] = Field(default=None, description="Exam date if found")
+    additional_info: Dict[str, str] = Field(default_factory=dict, description="Any other metadata found")
 
 
-class DocumentOCRResult(BaseModel):
-    """Complete OCR results for entire document"""
-    total_pages: int = Field(ge=1, description="Total number of pages")
-    pages: List[OCRResult] = Field(description="OCR results for each page")
-    total_processing_time_ms: float = Field(ge=0, description="Total OCR processing time")
-    ocr_provider: str = Field(description="OCR provider used")
-    timestamp: datetime = Field(default_factory=datetime.now, description="When OCR was performed")
-
-
-class PageEvaluation(BaseModel):
-    """Evaluation result for a single page"""
-    page_number: int = Field(description="Page number (1-indexed)")
-    marks_awarded: float = Field(ge=0, description="Marks awarded for this page")
-    max_marks: float = Field(gt=0, description="Maximum possible marks for this page")
-    remarks: str = Field(max_length=500, description="Examiner remarks")
-    confidence: float = Field(ge=0.0, le=1.0, default=0.8, description="Evaluation confidence")
+class QuestionData(BaseModel):
+    """Data for a single question"""
+    question_number: str = Field(description="Question number (e.g., '1', '2a', '3.i')")
+    page_numbers: List[int] = Field(description="Pages where this question appears")
+    question_text: str = Field(description="The actual question text")
+    student_answer: str = Field(description="Student's written answer")
+    allocated_marks: Optional[float] = Field(default=None, description="Marks allocated to this question")
+    
+    # Evaluation results (filled by LLM)
+    marks_awarded: Optional[float] = Field(default=None, description="Marks awarded by evaluator")
+    remarks: Optional[str] = Field(default=None, description="Evaluator's remarks")
     strengths: List[str] = Field(default_factory=list, description="Positive aspects")
     improvements: List[str] = Field(default_factory=list, description="Areas for improvement")
-    
-    @field_validator('remarks')
-    @classmethod
-    def validate_remarks(cls, v: str) -> str:
-        """Ensure remarks are professional and non-empty"""
-        if not v or len(v.strip()) == 0:
-            return "Answer reviewed."
-        return v.strip()
+    is_correct: Optional[bool] = Field(default=None, description="Whether answer is correct")
+
+
+class OCRResult(BaseModel):
+    """OCR extraction result for entire paper"""
+    metadata: PaperMetadata = Field(description="Paper metadata from first page")
+    questions: List[QuestionData] = Field(description="All questions with answers")
+    total_pages: int = Field(ge=1, description="Total number of pages")
+    processing_time_ms: float = Field(ge=0, description="Time taken for OCR")
+    ocr_provider: str = Field(description="OCR provider used")
+    timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class EvaluationSummary(BaseModel):
     """Summary of entire evaluation"""
-    total_pages: int = Field(ge=1)
-    total_marks_awarded: float = Field(ge=0)
-    total_max_marks: float = Field(gt=0)
-    percentage: float = Field(ge=0, le=100)
-    grade: Optional[str] = Field(default=None, description="Letter grade based on percentage")
-    pages_evaluated: List[PageEvaluation]
+    total_questions: int = Field(ge=1, description="Total number of questions")
+    total_marks_awarded: float = Field(ge=0, description="Total marks awarded")
+    total_max_marks: float = Field(gt=0, description="Total maximum marks")
+    percentage: float = Field(ge=0, le=100, description="Percentage score")
+    grade: Optional[str] = Field(default=None, description="Letter grade")
+    
+    questions_evaluated: List[QuestionData] = Field(description="All evaluated questions")
     overall_remarks: str = Field(default="", description="Overall feedback")
+    
     processing_time_seconds: float = Field(ge=0)
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
 class EvaluationRequest(BaseModel):
     """Request for answer sheet evaluation"""
-    subject: str = Field(min_length=1, max_length=100, description="Subject name")
-    marking_scheme: str = Field(description="Detailed marking scheme or rubric")
-    max_marks_per_page: float = Field(gt=0, description="Maximum marks per page")
-    llm_provider: LLMProvider = Field(default=LLMProvider.GEMINI)
+    # Optional - will be extracted from PDF if not provided
+    subject: Optional[str] = Field(default=None, description="Subject name (auto-extracted if not provided)")
+    total_marks: Optional[float] = Field(default=None, description="Total marks (auto-extracted if not provided)")
+    
+    # Required marking scheme
+    marking_scheme: Optional[str] = Field(
+        default=None,
+        description="Detailed marking scheme or rubric (optional - generic if not provided)"
+    )
     
     # Optional configurations
+    llm_provider: LLMProvider = Field(default=LLMProvider.GEMINI)
     strict_marking: bool = Field(default=False, description="Apply strict marking criteria")
     include_partial_credit: bool = Field(default=True, description="Award partial marks")
-    
-    @field_validator('marking_scheme')
-    @classmethod
-    def validate_marking_scheme(cls, v: str) -> str:
-        """Ensure marking scheme is not empty"""
-        if not v or len(v.strip()) == 0:
-            raise ValueError("Marking scheme cannot be empty")
-        return v.strip()
+    auto_extract_metadata: bool = Field(default=True, description="Extract subject/marks from PDF")
 
 
-class PageEvaluationRequest(BaseModel):
-    """Request for evaluating a single page"""
-    page_number: int = Field(description="Page number being evaluated")
-    extracted_text: str = Field(description="OCR extracted text from page")
+class QuestionEvaluationRequest(BaseModel):
+    """Request for evaluating a single question"""
+    question: QuestionData = Field(description="Question with student answer")
     subject: str = Field(description="Subject name")
-    marking_scheme: str = Field(description="Marking criteria")
-    max_marks: float = Field(gt=0, description="Maximum marks for this page")
+    marking_scheme: Optional[str] = Field(default=None, description="Marking criteria")
     strict_marking: bool = Field(default=False)
     include_partial_credit: bool = Field(default=True)
-
-
-class PageEvaluationResponse(BaseModel):
-    """LLM response for page evaluation"""
-    marks_awarded: float = Field(ge=0, description="Marks awarded")
-    max_marks: float = Field(gt=0, description="Maximum marks")
-    remarks: str = Field(description="Detailed feedback")
-    strengths: List[str] = Field(default_factory=list, description="What was done well")
-    improvements: List[str] = Field(default_factory=list, description="What could be improved")
-    reasoning: Optional[str] = Field(default=None, description="Internal reasoning (for debugging)")
 
 
 class AnnotationConfig(BaseModel):
     """Configuration for PDF annotations"""
     font_size: int = Field(default=10, ge=6, le=14)
-    font_color: tuple[float, float, float] = Field(default=(1, 0, 0), description="RGB in 0-1 range")
     show_remarks: bool = Field(default=True, description="Show remarks on pages")
     show_marks: bool = Field(default=True, description="Show marks on pages")
     show_summary: bool = Field(default=True, description="Show summary on last page")
+    
+    # Colors (RGB in 0-1 range)
+    correct_color: tuple[float, float, float] = Field(default=(0, 0.6, 0), description="Green for correct")
+    partial_color: tuple[float, float, float] = Field(default=(0.8, 0.5, 0), description="Orange for partial")
+    incorrect_color: tuple[float, float, float] = Field(default=(0.8, 0, 0), description="Red for incorrect")
 
 
 class ProcessingStatus(str, Enum):
@@ -135,7 +127,7 @@ class EvaluationJob(BaseModel):
     request: EvaluationRequest
     
     # OCR Phase
-    ocr_result: Optional[DocumentOCRResult] = None
+    ocr_result: Optional[OCRResult] = None
     
     # Evaluation Phase
     evaluation_summary: Optional[EvaluationSummary] = None

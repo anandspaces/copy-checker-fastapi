@@ -21,7 +21,6 @@ class ServiceFactory:
     _ocr_service: Optional[OCRService] = None
     _evaluation_service: Optional[EvaluationService] = None
     _annotation_service: Optional[PDFAnnotationService] = None
-    _orchestrator: Optional[EvaluationOrchestrator] = None
     
     @classmethod
     def get_ocr_service(cls, provider: str = "gemini") -> OCRService:
@@ -123,4 +122,3 @@ class ServiceFactory:
         cls._ocr_service = None
         cls._evaluation_service = None
         cls._annotation_service = None
-        cls._orchestrator = None
