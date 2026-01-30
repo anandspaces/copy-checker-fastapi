@@ -186,20 +186,22 @@ class PDFAnnotationService:
     ) -> None:
         """Add marks box to page"""
         
-        # Position: bottom-right corner
-        box_width = 150
-        box_height = 35
-        x = page_width - box_width - 15
-        y = page_height - box_height - 15
-        
-        # Draw box
-        box_rect = fitz.Rect(
-            x - 5,
-            y - 5,
-            min(x + box_width + 5, page_width),
-            min(y + box_height + 5, page_height)
-        )
-        
+        logger.debug(f"Adding marks box to page {evaluation.page_number}")
+        logger.debug(f"  Marks: {evaluation.marks_awarded}/{evaluation.max_marks}")
+            
+        # Position: bottom-right corner with better margins
+        box_width = 140
+        box_height = 50  # Increased height
+        margin = 20
+            
+        x = page_width - box_width - margin
+        y = page_height - box_height - margin
+            
+        logger.debug(f"  Box position: x={x}, y={y}, w={box_width}, h={box_height}")
+            
+        # Draw background rectangle
+        box_rect = fitz.Rect(x, y, x + box_width, y + box_height)
+            
         page.draw_rect(
             box_rect,
             color=(0.8, 0, 0),      # Dark red border
@@ -207,44 +209,33 @@ class PDFAnnotationService:
             width=2
         )
         
-        # Add marks text
-        marks_text = f"Marks: {evaluation.marks_awarded}/{evaluation.max_marks}"
+        # Calculate percentage
         percentage = (evaluation.marks_awarded / evaluation.max_marks * 100) if evaluation.max_marks > 0 else 0
-        percentage_text = f"({percentage:.0f}%)"
         
-        # Main marks text
+        # Create combined text
+        marks_text = f"Marks: {evaluation.marks_awarded}/{evaluation.max_marks}\n({percentage:.0f}%)"
+        
+        # Single textbox with all content
         text_rect = fitz.Rect(
-            x,
-            y,
-            min(x + box_width - 10, page_width - 10),
-            min(y + 20, page_height - 10)
+            x + 5,
+            y + 5,
+            x + box_width - 5,
+            y + box_height - 5
         )
         
-        page.insert_textbox(
+        rc = page.insert_textbox(
             text_rect,
             marks_text,
-            fontsize=self.config.font_size + 2,
-            fontname="hebo",  # Bold
+            fontsize=11,  # Slightly larger
+            fontname="hebo",  # Bold font
             color=(0.8, 0, 0),
             align=fitz.TEXT_ALIGN_CENTER
         )
         
-        # Percentage text
-        pct_rect = fitz.Rect(
-            x,
-            y + 18,
-            min(x + box_width - 10, page_width - 10),
-            min(y + 32, page_height - 10)
-        )
-        
-        page.insert_textbox(
-            pct_rect,
-            percentage_text,
-            fontsize=self.config.font_size,
-            fontname="helv",
-            color=(0.6, 0, 0),
-            align=fitz.TEXT_ALIGN_CENTER
-        )
+        if rc < 0:
+            logger.warning(f"Text insertion failed for page {evaluation.page_number}, return code: {rc}")
+        else:
+            logger.debug(f"  Marks box added successfully")
     
     def _add_summary_page(self, page: fitz.Page, summary: EvaluationSummary) -> None:
         """Add evaluation summary to last page"""
