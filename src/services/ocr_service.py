@@ -10,6 +10,8 @@ from google import genai
 from google.genai import types
 import os
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import asyncio
 
 from src.schemas import OCRResult, DocumentOCRResult
 
@@ -49,20 +51,28 @@ class OCRService(ABC):
 
 
 class GeminiOCRService(OCRService):
-    """OCR service using Google Gemini Vision API"""
+    """OCR service using Google Gemini Vision API with parallel processing"""
     
-    def __init__(self, model_name: str = "gemini-3-flash-preview", max_retries: int = 3):
+    def __init__(
+        self, 
+        model_name: str = "gemini-3-flash-preview", 
+        max_retries: int = 3,
+        max_workers: int = 10  # NEW: Control parallelism
+    ):
         """
         Initialize Gemini OCR service
         
         Args:
             model_name: Gemini model to use
             max_retries: Maximum retry attempts for failed requests
+            max_workers: Maximum number of concurrent threads (default: 10)
         """
         logger.info(f"Initializing GeminiOCRService with model: {model_name}")
+        logger.info(f"Max concurrent workers: {max_workers}")
         
         self.model_name = model_name
         self.max_retries = max_retries
+        self.max_workers = max_workers
         
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
@@ -73,7 +83,7 @@ class GeminiOCRService(OCRService):
     
     def extract_text_from_pdf(self, pdf_path: Path) -> DocumentOCRResult:
         """
-        Extract text from all pages of a PDF using Gemini Vision
+        Extract text from all pages of a PDF using parallel processing
         
         Args:
             pdf_path: Path to PDF file
@@ -81,7 +91,7 @@ class GeminiOCRService(OCRService):
         Returns:
             DocumentOCRResult with all pages processed
         """
-        logger.info(f"Starting OCR for PDF: {pdf_path}")
+        logger.info(f"Starting parallel OCR for PDF: {pdf_path}")
         start_time = time.time()
         
         try:
@@ -91,27 +101,23 @@ class GeminiOCRService(OCRService):
             if total_pages == 0:
                 raise ValueError("PDF has no pages")
             
-            logger.info(f"PDF has {total_pages} pages. Starting extraction...")
+            logger.info(f"PDF has {total_pages} pages. Starting parallel extraction with {self.max_workers} workers...")
             
-            page_results: List[OCRResult] = []
-            
+            # Extract all page images first (fast operation)
+            page_images = []
             for page_num in range(total_pages):
-                logger.info(f"Processing page {page_num + 1}/{total_pages}")
-                
-                # Convert page to high-quality image
                 page = doc[page_num]
                 pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x zoom for better quality
                 img_data = pix.tobytes("png")
-                
-                # Extract text using Gemini
-                ocr_result = self.extract_text_from_page(img_data, page_num + 1)
-                page_results.append(ocr_result)
-                
-                logger.info(f"Page {page_num + 1} OCR complete. "
-                          f"Confidence: {ocr_result.confidence:.2f}, "
-                          f"Text length: {len(ocr_result.raw_text)}")
+                page_images.append((page_num + 1, img_data))
             
             doc.close()
+            
+            # Process pages in parallel
+            page_results = self._process_pages_parallel(page_images)
+            
+            # Sort by page number to maintain order
+            page_results.sort(key=lambda x: x.page_number)
             
             total_time = (time.time() - start_time) * 1000  # Convert to ms
             
@@ -119,17 +125,57 @@ class GeminiOCRService(OCRService):
                 total_pages=total_pages,
                 pages=page_results,
                 total_processing_time_ms=round(total_time, 2),
-                ocr_provider="Gemini Vision"
+                ocr_provider="Gemini Vision (Parallel)"
             )
             
-            logger.info(f"OCR complete for all {total_pages} pages. "
-                       f"Total time: {total_time:.0f}ms")
+            logger.info(f"Parallel OCR complete for all {total_pages} pages. "
+                       f"Total time: {total_time:.0f}ms "
+                       f"({total_time/total_pages:.0f}ms avg per page)")
             
             return result
             
         except Exception as e:
             logger.error(f"OCR failed for PDF: {str(e)}", exc_info=True)
             raise Exception(f"OCR extraction failed: {str(e)}")
+    
+    def _process_pages_parallel(self, page_images: List[tuple]) -> List[OCRResult]:
+        """
+        Process multiple pages in parallel using ThreadPoolExecutor
+        
+        Args:
+            page_images: List of (page_number, image_bytes) tuples
+            
+        Returns:
+            List of OCRResult objects
+        """
+        results = []
+        
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            # Submit all tasks
+            future_to_page = {
+                executor.submit(self.extract_text_from_page, img_data, page_num): page_num
+                for page_num, img_data in page_images
+            }
+            
+            # Collect results as they complete
+            for future in as_completed(future_to_page):
+                page_num = future_to_page[future]
+                try:
+                    result = future.result()
+                    results.append(result)
+                    logger.info(f"✓ Page {page_num}/{len(page_images)} complete "
+                               f"({len(results)}/{len(page_images)} done)")
+                except Exception as e:
+                    logger.error(f"✗ Page {page_num} failed: {str(e)}")
+                    # Create error result
+                    results.append(OCRResult(
+                        page_number=page_num,
+                        raw_text=f"[OCR Error: {str(e)}]",
+                        confidence=0.0,
+                        processing_time_ms=0.0
+                    ))
+        
+        return results
     
     def extract_text_from_page(self, image_bytes: bytes, page_number: int) -> OCRResult:
         """
