@@ -33,39 +33,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title="Answer Sheet Evaluation API",
-    description="""
-    Automated subjective answer sheet evaluation system using OCR, Computer Vision, and Google Gemini.
-    
-    ## Features
-    
-    - **PDF Processing**: Accepts PDF answer sheets (only PDF file is required)
-    - **OCR**: Extracts handwritten/printed text using Tesseract
-    - **Computer Vision**: Analyzes page metadata (writing density, diagrams, crossed-out regions)
-    - **AI Evaluation**: Uses Google Gemini for subject-aware evaluation
-    - **PDF Annotation**: Overlays marks and remarks on original PDF
-    
-    ## Workflow
-    
-    1. Upload PDF answer sheet (REQUIRED)
-    2. Optionally provide subject and marking scheme
-    3. System processes each page:
-       - Converts to image
-       - Applies OCR
-       - Extracts vision metadata
-       - Evaluates with Gemini
-    4. Returns annotated PDF with marks and remarks
-    
-    ## API Key Required
-    
-    - **Gemini**: Set `GEMINI_API_KEY` environment variable
-      - Get your key from: https://makersuite.google.com/app/apikey
-    
-    ## Limitations
-    
-    - Maximum PDF size: 50MB
-    - Supports English language by default
-    - OCR accuracy depends on handwriting quality
-    """,
+    description="""Automated subjective answer sheet evaluation system using OCR, Computer Vision, and Google Gemini.""",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",

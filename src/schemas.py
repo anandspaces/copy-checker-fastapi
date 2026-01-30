@@ -1,3 +1,5 @@
+# src/schemas.py
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from enum import Enum
@@ -6,7 +8,6 @@ from enum import Enum
 class LLMProvider(str, Enum):
     """Supported LLM providers"""
     GEMINI = "gemini"
-    OPENAI = "openai"
 
 
 class PageMetadata(BaseModel):
