@@ -15,7 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libmupdf-dev \
     mupdf-tools \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip, setuptools, and wheel first
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy requirements first for better caching
 COPY requirements.txt .
