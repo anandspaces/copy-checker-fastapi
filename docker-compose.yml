@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    container_name: answer-sheet-evaluator
+    ports:
+      - "9026:8000"
+    env-file:
+      - .env
+    volumes:
+      # Mount for development (remove in production)
+      - ./:/app
+      # Persistent temp directory
+      - temp-files:/tmp/answer_sheet_evaluator
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  temp-files:

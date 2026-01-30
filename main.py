@@ -19,7 +19,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('evaluation_service.log')
+        # logging.FileHandler('evaluation_service.log')
     ]
 )
 logger = logging.getLogger(__name__)
