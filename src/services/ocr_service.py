@@ -38,13 +38,19 @@ class OCRService(ABC):
 
 
 class GeminiOCRService(OCRService):
-    """OCR service using Google Gemini Vision API - Question-wise extraction"""
+    """
+    OCR service that handles long documents better
+    - Processes text in chunks to avoid truncation
+    - Better question boundary detection
+    - Handles multi-page questions correctly
+    """
     
     def __init__(
         self, 
-        model_name: str = "gemini-3-flash-preview",
+        model_name: str = "gemini-3-flash-preview",  # Using latest model
         max_retries: int = 3,
-        max_workers: int = 10
+        max_workers: int = 10,
+        chunk_size: int = 30000  # Increased chunk size
     ):
         """
         Initialize Gemini OCR service
@@ -53,12 +59,14 @@ class GeminiOCRService(OCRService):
             model_name: Gemini model to use
             max_retries: Maximum retry attempts
             max_workers: Maximum concurrent threads
+            chunk_size: Maximum characters per chunk
         """
         logger.info(f"Initializing GeminiOCRService with model: {model_name}")
         
         self.model_name = model_name
         self.max_retries = max_retries
         self.max_workers = max_workers
+        self.chunk_size = chunk_size
         
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
@@ -109,7 +117,7 @@ class GeminiOCRService(OCRService):
             logger.info(f"Extracting questions from all {total_pages} pages...")
             questions = self._extract_questions_from_pages(page_images)
             
-            logger.info(f"Extracted {len(questions)} questions")
+            logger.info(f"✓ Extracted {len(questions)} questions")
             
             processing_time = (time.time() - start_time) * 1000
             
@@ -195,7 +203,7 @@ If any information is not found, use null. Be precise with numbers."""
     
     def _extract_questions_from_pages(self, page_images: List[tuple]) -> List[QuestionData]:
         """
-        Extract questions from all pages using parallel processing
+        Extract questions from all pages with better handling
         
         Args:
             page_images: List of (page_number, image_bytes) tuples
@@ -208,15 +216,22 @@ If any information is not found, use null. Be precise with numbers."""
         # Extract text from each page first
         page_texts = self._extract_page_texts_parallel(page_images)
         
-        # Combine all page texts
-        combined_text = "\n\n--- PAGE BREAK ---\n\n".join(
+        # Combine all page texts with clear markers
+        combined_text = "\n\n=== PAGE BREAK ===\n\n".join(
             f"[PAGE {page_num}]\n{text}" 
             for page_num, text in page_texts
         )
         
-        # Now extract structured questions from combined text
-        logger.info("Parsing combined text into questions...")
-        questions = self._parse_into_questions(combined_text, page_texts)
+        # Check if text is too long and needs chunking
+        if len(combined_text) > self.chunk_size:
+            logger.info(f"Text is long ({len(combined_text)} chars), using chunked extraction...")
+            questions = self._parse_with_chunking(combined_text, page_texts)
+        else:
+            logger.info("Parsing combined text into questions...")
+            questions = self._parse_into_questions(combined_text, page_texts)
+        
+        # Validate and clean questions
+        questions = self._validate_and_clean_questions(questions)
         
         return questions
     
@@ -251,7 +266,7 @@ If any information is not found, use null. Be precise with numbers."""
     
     def _extract_text_from_page(self, image_bytes: bytes, page_number: int) -> str:
         """
-        Extract text from a single page
+        Extract text from a single page with prompt
         
         Args:
             image_bytes: PNG image data
@@ -260,17 +275,22 @@ If any information is not found, use null. Be precise with numbers."""
         Returns:
             Extracted text
         """
-        prompt = """Extract ALL text from this answer sheet page.
+        prompt = """Extract ALL text from this answer sheet page with high accuracy.
 
 Include:
-- Question numbers and text
-- Student's handwritten answers
-- Any marks written (like "5/10" or "Marks: 7")
-- Diagrams labels
+- Question numbers (like "1.", "Q1", "1a", etc.)
+- Complete question text
+- Student's handwritten answers (COMPLETE, don't truncate)
+- Any marks allocated (like "8 marks", "[10]", "Marks: 5")
+- Diagrams, labels, formulas
 
-Preserve structure and reading order (top to bottom).
+IMPORTANT:
+- Extract COMPLETE answers, don't cut off mid-sentence
+- Preserve question numbering exactly as shown
+- Mark clear boundaries between questions
+- If answer continues, extract it fully
 
-Return ONLY the extracted text."""
+Return ONLY the extracted text with clear structure."""
 
         contents = [
             types.Part.from_text(text=prompt),
@@ -282,7 +302,10 @@ Return ONLY the extracted text."""
                 response = self.client.models.generate_content(
                     model=self.model_name,
                     contents=contents,
-                    config=types.GenerateContentConfig(temperature=0.0)
+                    config=types.GenerateContentConfig(
+                        temperature=0.0,
+                        max_output_tokens=4096  # Increased for long answers
+                    )
                 )
                 
                 return response.text.strip()
@@ -293,32 +316,118 @@ Return ONLY the extracted text."""
                 else:
                     raise
     
-    def _parse_into_questions(
+    def _parse_with_chunking(
         self, 
         combined_text: str, 
         page_texts: List[tuple]
     ) -> List[QuestionData]:
         """
-        Parse combined text into structured questions using Gemini
+        Parse very long texts by chunking and merging results
         
         Args:
             combined_text: All pages combined
+            page_texts: List of (page_num, text)
+            
+        Returns:
+            List of QuestionData
+        """
+        logger.info("Using chunked parsing for long document...")
+        
+        # Split text into overlapping chunks at page boundaries
+        chunks = self._create_smart_chunks(combined_text, page_texts)
+        
+        all_questions = []
+        
+        for i, chunk in enumerate(chunks, 1):
+            logger.info(f"Processing chunk {i}/{len(chunks)}...")
+            try:
+                chunk_questions = self._parse_into_questions(chunk, page_texts)
+                all_questions.extend(chunk_questions)
+            except Exception as e:
+                logger.error(f"Chunk {i} parsing failed: {e}")
+        
+        # Deduplicate questions based on question number
+        unique_questions = self._deduplicate_questions(all_questions)
+        
+        logger.info(f"Merged {len(all_questions)} → {len(unique_questions)} unique questions")
+        
+        return unique_questions
+    
+    def _create_smart_chunks(
+        self, 
+        combined_text: str, 
+        page_texts: List[tuple]
+    ) -> List[str]:
+        """
+        Create smart chunks at page boundaries with overlap
+        
+        Args:
+            combined_text: Full combined text
+            page_texts: Page text tuples
+            
+        Returns:
+            List of text chunks
+        """
+        chunks = []
+        chunk_pages = 8  # Process 8 pages at a time
+        overlap_pages = 2  # 2 pages overlap
+        
+        total_pages = len(page_texts)
+        
+        for start_idx in range(0, total_pages, chunk_pages - overlap_pages):
+            end_idx = min(start_idx + chunk_pages, total_pages)
+            
+            # Get pages for this chunk
+            chunk_page_texts = page_texts[start_idx:end_idx]
+            
+            # Combine them
+            chunk_text = "\n\n=== PAGE BREAK ===\n\n".join(
+                f"[PAGE {page_num}]\n{text}" 
+                for page_num, text in chunk_page_texts
+            )
+            
+            chunks.append(chunk_text)
+            logger.debug(f"Chunk: Pages {start_idx + 1} to {end_idx}")
+            
+            if end_idx >= total_pages:
+                break
+        
+        return chunks
+    
+    def _parse_into_questions(
+        self, 
+        text: str, 
+        page_texts: List[tuple]
+    ) -> List[QuestionData]:
+        """
+        Parse text into structured questions using Gemini (PROMPT)
+        
+        Args:
+            text: Text to parse
             page_texts: List of (page_num, text) for page mapping
             
         Returns:
             List of QuestionData
         """
-        prompt = f"""You are parsing an answer sheet. Extract each question with its answer.
+        # Limit text if still too long (should not happen with chunking)
+        text_to_parse = text[:self.chunk_size]
+        
+        prompt = f"""You are parsing an answer sheet. Extract EVERY question with its answer.
+
+CRITICAL: Find ALL questions, even if they span multiple pages. Common patterns:
+- "1.", "Q1", "Question 1", "1)", "1a", "1(a)", etc.
+- Questions in Hindi/regional languages
+- Questions with marks like "8 marks", "[10]", "(10 Marks)"
 
 ANSWER SHEET TEXT:
-{combined_text[:15000]}  
+{text_to_parse}
 
 Parse into questions and return ONLY a JSON array:
 [
   {{
     "question_number": "1" or "2a" or "3.i",
-    "question_text": "the actual question",
-    "student_answer": "student's written answer",
+    "question_text": "the actual question (full text)",
+    "student_answer": "student's written answer (COMPLETE, don't truncate)",
     "allocated_marks": 10 (or null if not found),
     "page_numbers": [1, 2] (pages where this question appears)
   }},
@@ -327,10 +436,12 @@ Parse into questions and return ONLY a JSON array:
 
 Rules:
 - Extract question number, question text, and student's answer separately
-- Look for marks like "10 marks", "[10]", "Marks: 5" 
+- Look for marks like "10 marks", "[10]", "Marks: 5", "8 अंक"
 - Track which pages each question spans
-- Maintain question order
+- Maintain question order (1, 2, 3, ...)
 - If marks not found, use null
+- Don't skip any questions
+- Extract COMPLETE answers, not truncated
 
 Return ONLY valid JSON array, nothing else."""
 
@@ -341,7 +452,7 @@ Return ONLY valid JSON array, nothing else."""
                 config=types.GenerateContentConfig(
                     temperature=0.0,
                     response_mime_type="application/json",
-                    max_output_tokens=8000
+                    max_output_tokens=8192  # Increased token limit
                 )
             )
             
@@ -358,7 +469,7 @@ Return ONLY valid JSON array, nothing else."""
                     page_numbers=q.get("page_numbers", [1])
                 ))
             
-            logger.info(f"Parsed {len(questions)} questions from text")
+            logger.info(f"Parsed {len(questions)} questions from text chunk")
             return questions
             
         except Exception as e:
@@ -367,7 +478,96 @@ Return ONLY valid JSON array, nothing else."""
             return [QuestionData(
                 question_number="1",
                 question_text="Complete answer sheet",
-                student_answer=combined_text[:3000],
+                student_answer=text[:3000],
                 allocated_marks=None,
                 page_numbers=list(range(1, len(page_texts) + 1))
             )]
+    
+    def _deduplicate_questions(self, questions: List[QuestionData]) -> List[QuestionData]:
+        """
+        Remove duplicate questions based on question number
+        
+        Args:
+            questions: List with potential duplicates
+            
+        Returns:
+            Deduplicated list
+        """
+        seen_numbers = set()
+        unique_questions = []
+        
+        for q in questions:
+            # Normalize question number
+            q_num = str(q.question_number).strip().lower()
+            
+            if q_num not in seen_numbers:
+                seen_numbers.add(q_num)
+                unique_questions.append(q)
+            else:
+                # Merge page numbers if same question
+                for existing_q in unique_questions:
+                    if str(existing_q.question_number).strip().lower() == q_num:
+                        # Merge page numbers
+                        existing_q.page_numbers = sorted(list(set(existing_q.page_numbers + q.page_numbers)))
+                        # Use longer answer
+                        if len(q.student_answer) > len(existing_q.student_answer):
+                            existing_q.student_answer = q.student_answer
+                        break
+        
+        return unique_questions
+    
+    def _validate_and_clean_questions(self, questions: List[QuestionData]) -> List[QuestionData]:
+        """
+        Validate and clean extracted questions
+        
+        Args:
+            questions: List of questions
+            
+        Returns:
+            Cleaned list
+        """
+        cleaned = []
+        
+        for q in questions:
+            # Skip invalid questions
+            if not q.question_text or not q.student_answer:
+                logger.warning(f"Skipping invalid question: Q{q.question_number}")
+                continue
+            
+            # Clean up question number
+            q.question_number = self._normalize_question_number(q.question_number)
+            
+            # Ensure page numbers are valid
+            if not q.page_numbers:
+                q.page_numbers = [1]
+            
+            cleaned.append(q)
+        
+        # Sort by question number
+        cleaned.sort(key=lambda q: self._extract_sort_key(q.question_number))
+        
+        return cleaned
+    
+    def _normalize_question_number(self, q_num: str) -> str:
+        """Normalize question number format"""
+        # Remove common prefixes
+        q_num = re.sub(r'^(question|q|प्रश्न)\s*', '', q_num.lower().strip())
+        # Remove extra punctuation
+        q_num = re.sub(r'[:\)\]\}\.]$', '', q_num)
+        return q_num.strip()
+    
+    def _extract_sort_key(self, q_num: str) -> tuple:
+        """
+        Extract sort key from question number for proper ordering
+        
+        Args:
+            q_num: Question number string
+            
+        Returns:
+            Tuple for sorting
+        """
+        # Extract numeric parts
+        numbers = re.findall(r'\d+', q_num)
+        if numbers:
+            return (int(numbers[0]), q_num)
+        return (999, q_num)

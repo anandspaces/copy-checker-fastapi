@@ -14,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ServiceFactory:
     """
-    Factory for creating and managing service instances
-    Implements dependency injection pattern
+    Factory for creating service instances with human-like annotation
     """
     
     _ocr_service: Optional[OCRService] = None
@@ -76,7 +75,7 @@ class ServiceFactory:
             Annotation service instance
         """
         if cls._annotation_service is None:
-            logger.info("Creating annotation service")
+            logger.info("Creating human-like annotation service")
             cls._annotation_service = PDFAnnotationService(config)
         
         return cls._annotation_service
@@ -89,7 +88,7 @@ class ServiceFactory:
         annotation_config: Optional[AnnotationConfig] = None
     ) -> EvaluationOrchestrator:
         """
-        Get or create orchestrator with all dependencies
+        Get orchestrator with human-like annotation
         
         Args:
             ocr_provider: OCR provider name
@@ -97,9 +96,9 @@ class ServiceFactory:
             annotation_config: Annotation configuration
             
         Returns:
-            Evaluation orchestrator instance
+            Evaluation orchestrator with services
         """
-        logger.info("Creating orchestrator with dependencies")
+        logger.info("Creating orchestrator with human-like annotation")
         
         # Get or create services
         ocr_service = cls.get_ocr_service(ocr_provider)
@@ -117,7 +116,7 @@ class ServiceFactory:
     
     @classmethod
     def reset(cls):
-        """Reset all service instances (useful for testing)"""
+        """Reset all service instances"""
         logger.info("Resetting service factory")
         cls._ocr_service = None
         cls._evaluation_service = None
