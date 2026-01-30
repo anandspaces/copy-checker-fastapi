@@ -4,7 +4,7 @@ services:
     container_name: answer-sheet-evaluator
     ports:
       - "9026:8000"
-    env-file:
+    env_file:
       - .env
     volumes:
       # Mount for development (remove in production)
